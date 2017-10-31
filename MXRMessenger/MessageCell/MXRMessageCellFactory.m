@@ -21,6 +21,8 @@ typedef struct MXRMessageContext {
     struct MXRMessageContext* next;
     BOOL isFromMe;
     BOOL isShowingDate;
+    BOOL isShowingAvatar;
+    __unsafe_unretained NSURL *avatarURL;
     NSTimeInterval timestamp;
     UIRectCorner cornersHavingRadius;
 } MXRMessageContext;
@@ -110,7 +112,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             if (avatarConfig.cornerRadius > 0) {
                 avatarNode.imageModificationBlock = [UIImage mxr_imageModificationBlockToScaleToSize:avatarConfig.size cornerRadius:avatarConfig.cornerRadius];
             }
-            avatarNode.URL = avatarURL;
+            avatarNode.URL = MXRMessageContextNextHasSameSender(context) ? nil : avatarURL;
             cell.avatarNode = avatarNode;
         }
         
@@ -178,15 +180,15 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
         // we dont need to calculate if previous is showing date since we only show
         // dates in headers to determine corner rounding
         previousContext->isShowingDate = NO;
-        context->isShowingDate = context->timestamp != 0 && (context->timestamp - previousContext->timestamp) > 900;
-        nextContext->isShowingDate = nextContext->timestamp != 0 && ((nextContext->timestamp - context->timestamp) > 900);
+        context->isShowingDate = context->timestamp != 0 && (context->timestamp - previousContext->timestamp) > 1800;
+        nextContext->isShowingDate = nextContext->timestamp != 0 && ((nextContext->timestamp - context->timestamp) > 1800);
     } else {
         previousContext->isShowingDate = context->isShowingDate = nextContext->isShowingDate = NO;
         previousContext->timestamp = context->timestamp = nextContext->timestamp = 0;
     }
     
     if ((avatarURLHandle != NULL) && _dataSourceFlags.avatarURLAtRow) {
-        *avatarURLHandle = [self.dataSource cellFactory:self avatarURLAtRow:row];
+            *avatarURLHandle = [self.dataSource cellFactory:self avatarURLAtRow:row];
     }
 
     UIRectCorner cornersHavingRadius = UIRectCornerTopLeft | UIRectCornerTopRight | UIRectCornerBottomLeft | UIRectCornerBottomRight;
@@ -210,6 +212,13 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
     return dateTextNode;
 }
 
+- (ASDisplayNode *)footerNodeFromText:(NSString *)text {
+    ASTextNode *readTextNode = [[ASTextNode alloc] init];
+    readTextNode.layerBacked = YES;
+    readTextNode.attributedText = [[NSAttributedString alloc] initWithString:text];
+    return readTextNode;
+}
+
 - (void)toggleDateHeaderNodeVisibilityForCellNode:(MXRMessageCellNode *)cellNode {
     NSIndexPath* indexPath = [cellNode indexPath];
     if (cellNode.headerNode) {
@@ -220,7 +229,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
     [cellNode setNeedsLayout];
 }
 
-- (void)updateTableNode:(ASTableNode *)tableNode animated:(BOOL)animated withInsertions:(NSArray<NSIndexPath *> *)insertions deletions:(NSArray<NSIndexPath *> *)deletions reloads:(NSArray<NSIndexPath *> *)reloads completion:(void (^)(BOOL))completion {
+- (void)updateTableNode:(ASTableNode *)tableNode animated:(BOOL)animated withInsertions:(NSArray<NSIndexPath *> *)insertions deletions:(NSArray<NSIndexPath *> *)deletions reloads:(NSArray<NSIndexPath *> *)reloads completion:(void (^)(BOOL finished))completion {
     
     NSInteger oldNumberOfRows = [tableNode numberOfRowsInSection:0];
     MXRMessageCellNode* oldMostRecentNode = nil;
@@ -246,13 +255,17 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             [weakSelf updateRoundedCornersOfCellNode:oldMostRecentNode];
         }
         
+        [tableNode performBatchAnimated:animated updates:^{
+            [tableNode reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:1 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
+        } completion:completion];
+        
         NSIndexPath* oldOldestIndexPath = [oldOldestNode indexPath];
         BOOL oldOldestNeedsReload = weakSelf.isAutomaticallyManagingDateHeaders && oldOldestIndexPath && oldOldestIndexPath.row != ([tableNode numberOfRowsInSection:0] - 1);
         if (oldOldestNeedsReload) {
             // We have to reload the oldest because it may erroneously show date headers after a tail load.
             // And it's not just dates, the top final inset can be wrong too.
             [tableNode performBatchAnimated:animated updates:^{
-                [tableNode reloadRowsAtIndexPaths:@[oldOldestIndexPath] withRowAnimation:UITableViewRowAnimationNone];
+                [tableNode reloadRowsAtIndexPaths:@[oldOldestIndexPath, [NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
             } completion:completion];
         } else {
             if (completion) completion(finished);

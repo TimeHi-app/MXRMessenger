@@ -30,7 +30,6 @@
 }
 
 - (instancetype)initWithNode:(ASDisplayNode *)node {
-    NSAssert(@"You did not call the desingated initializer of %@", NSStringFromClass([self class]));
     return [self initWithNode:[[MXRMessengerNode alloc] init] toolbar:[[MXRMessengerInputToolbar alloc] init]];
 }
 
@@ -89,7 +88,7 @@
     if (self.navigationController && !self.navigationController.isNavigationBarHidden) {
         t += self.navigationController.navigationBar.frame.size.height;
     }
-    return t;
+    return 0;
 }
 
 #pragma mark - NSNotificationCenter

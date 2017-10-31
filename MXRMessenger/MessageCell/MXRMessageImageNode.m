@@ -125,7 +125,7 @@
 }
 
 + (CGSize)suggestedMaxImageSizeForScreenSize:(CGSize)screenSize {
-    int maximumImageWidth = (int)(screenSize.width * 0.75f);
+    int maximumImageWidth = (int)(screenSize.width * 0.50f);
     while ((maximumImageWidth % 3 != 1) && (maximumImageWidth % 2 != 0)) {
         // for the media collection it helps with spacing if its 1 mod 3 and 0 mod 2
         maximumImageWidth--;

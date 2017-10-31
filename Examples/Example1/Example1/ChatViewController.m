@@ -43,6 +43,8 @@
     [super viewDidLoad];
     self.navigationItem.title = self.title;
     
+    
+    
     self.node.tableNode.delegate = self; // actually redundant bc MXRMessenger sets it
     self.node.tableNode.dataSource = self;
     self.node.tableNode.allowsSelection = YES;
@@ -55,7 +57,7 @@
     MXRMessageCellLayoutConfiguration* layoutConfigForMe = [MXRMessageCellLayoutConfiguration rightToLeft];
     MXRMessageCellLayoutConfiguration* layoutConfigForOthers = [MXRMessageCellLayoutConfiguration leftToRight];
     
-    MXRMessageAvatarConfiguration* avatarConfigForMe = nil;
+    MXRMessageAvatarConfiguration* avatarConfigForMe = [[MXRMessageAvatarConfiguration alloc] init];
     MXRMessageAvatarConfiguration* avatarConfigForOthers = [[MXRMessageAvatarConfiguration alloc] init];
     
     MXRMessageTextConfiguration* textConfigForMe = [[MXRMessageTextConfiguration alloc] initWithFont:nil textColor:[UIColor whiteColor] backgroundColor:[UIColor mxr_fbMessengerBlue]];
@@ -114,7 +116,7 @@
 }
 
 - (NSURL *)cellFactory:(MXRMessageCellFactory *)cellFactory avatarURLAtRow:(NSInteger)row {
-    return [self cellFactory:cellFactory isMessageFromMeAtRow:row] ? nil : self.otherPersonsAvatar;
+    return [self cellFactory:cellFactory isMessageFromMeAtRow:row] ? self.otherPersonsAvatar : self.otherPersonsAvatar;
 }
 
 - (NSTimeInterval)cellFactory:(MXRMessageCellFactory *)cellFactory timeIntervalSince1970AtRow:(NSInteger)row {
@@ -183,7 +185,7 @@
 - (void)fetchMessages {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSMutableArray* messages = [[NSMutableArray alloc] init];
-        NSTimeInterval timestamp = [NSDate date].timeIntervalSince1970 - 1800;
+        NSTimeInterval timestamp = [NSDate date].timeIntervalSince1970 - 3600;
         for (int i = 0; i < 20; i++) {
             Message* m = [Message randomMessage];
             m.timestamp = timestamp;
@@ -196,6 +198,10 @@
         });
     });
 
+}
+
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    NSLog(@"%f", scrollView.contentOffset.y);
 }
 
 @end
