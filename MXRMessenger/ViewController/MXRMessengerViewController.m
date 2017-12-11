@@ -30,6 +30,7 @@
 }
 
 - (instancetype)initWithNode:(ASDisplayNode *)node {
+    NSAssert(NO, @"You did not call the designated initializer of %@", NSStringFromClass([self class]));
     return [self initWithNode:[[MXRMessengerNode alloc] init] toolbar:[[MXRMessengerInputToolbar alloc] init]];
 }
 
@@ -37,7 +38,6 @@
     self = [super initWithNode:node];
     if (self) {
         self.hidesBottomBarWhenPushed = YES;
-        self.automaticallyAdjustsScrollViewInsets = NO;
         _toolbar = toolbar;
     }
     return self;
@@ -45,15 +45,21 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    if (@available(iOS 11, *)) {
+        self.node.tableNode.view.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+    } else {
+        self.automaticallyAdjustsScrollViewInsets = NO;
+    }
+
     CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
     _toolbarContainerView = [[MXRMessengerInputToolbarContainerView alloc] initWithMessengerInputToolbar:self.toolbar constrainedSize:ASSizeRangeMake(CGSizeMake(screenWidth, 0), CGSizeMake(screenWidth, CGFLOAT_MAX))];
     _minimumBottomInset = self.toolbarContainerView.toolbarNode.calculatedSize.height;
     _topInset = [self calculateTopInset];
-    
+
     self.node.tableNode.view.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.node.tableNode.view.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
-    self.node.tableNode.view.contentInset = UIEdgeInsetsMake(_minimumBottomInset, 0, self.topInset, 0);
-    self.node.tableNode.view.scrollIndicatorInsets = UIEdgeInsetsMake(_minimumBottomInset, 0, self.topInset, 0);
+    self.node.tableNode.contentInset = UIEdgeInsetsMake(_minimumBottomInset, 0, _topInset, 0);
+    self.node.tableNode.view.scrollIndicatorInsets = UIEdgeInsetsMake(_minimumBottomInset, 0, _topInset, 0);
     self.node.tableNode.delegate = self;
 
     [self observeKeyboardChanges];

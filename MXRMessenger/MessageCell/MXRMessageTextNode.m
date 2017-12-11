@@ -10,12 +10,21 @@
 
 #import "UIImage+MXRMessenger.h"
 #import "UIColor+MXRMessenger.h"
+#import "MXRMessageContentNode+Subclasses.h"
+
+@interface MXRMessageTextNode () <ASTextNodeDelegate>
+
+@end
 
 @implementation MXRMessageTextNode {
     MXRMessageTextConfiguration* _configuration;
     UIRectCorner _cornersHavingRadius;
     
-    NSTimeInterval _touchStartTimestamp;
+    BOOL _delegateImplementsTapURL;
+    BOOL _delegateImplementsLongTapURL;
+    
+    BOOL _hasLinks;
+    BOOL _isTouchingURL;
 }
 
 - (instancetype)initWithText:(NSString *)text configuration:(MXRMessageTextConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius {
@@ -27,7 +36,13 @@
         
         _textNode = [[ASTextNode alloc] init];
         _textNode.layerBacked = YES;
-        _textNode.attributedText = [[NSAttributedString alloc] initWithString:(text ? : @"") attributes:_configuration.textAttributes];
+        NSMutableAttributedString* attributedText = [[NSMutableAttributedString alloc] initWithString:(text ? : @"") attributes:_configuration.textAttributes];
+        if (_configuration.isLinkDetectionEnabled && _configuration.linkAttributes && text.length > 0) {
+            NSArray* links = [MXRMessageTextNode applyAttributes:_configuration.linkAttributes toLinksInMutableAttributedString:attributedText];
+            _hasLinks = links.count > 0;
+            _textNode.highlightStyle = _configuration.linkHighlightStyle;
+        }
+        _textNode.attributedText = attributedText;
         _backgroundImageNode = [[ASImageNode alloc] init];
         _backgroundImageNode.layerBacked = YES;
         [self redrawBubble];
@@ -50,6 +65,13 @@
     return [ASBackgroundLayoutSpec backgroundLayoutSpecWithChild:textInset background:_backgroundImageNode];
 }
 
+- (void)didLoad {
+    [super didLoad];
+    if (_hasLinks) {
+        [_textNode.layer as_setAllowsHighlightDrawing:YES];
+    }
+}
+
 - (void)redrawBubble {
     [self redrawBubbleImageWithColor:_configuration.backgroundColor];
 }
@@ -60,7 +82,49 @@
 
 #pragma mark - MXRMessageContentNode
 
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if (_hasLinks) {
+        _isTouchingURL = [self urlTouched:touches performHighlight:YES] != nil;
+    }
+    [super touchesBegan:touches withEvent:event];
+}
+
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if (_isTouchingURL) {
+        [_textNode setHighlightRange:NSMakeRange(0, 0) animated:NO];
+    }
+    _isTouchingURL = NO;
+    [super touchesCancelled:touches withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [super touchesMoved:touches withEvent:event];
+}
+
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if (!_isTouchingURL) {
+        [super touchesEnded:touches withEvent:event];
+        return;
+    }
+    _isTouchingURL = NO;
+    [_textNode setHighlightRange:NSMakeRange(0, 0) animated:NO];
+    NSURL* url = [self urlTouched:touches performHighlight:NO];
+    if (url) {
+        CGFloat duration = event.timestamp - self.touchStartTimestamp;
+        if (duration > 0.35f && _delegateImplementsLongTapURL) {
+            [self.delegate messageContentNode:self didLongTapURL:url];
+        } else if (_delegateImplementsTapURL) {
+            [self.delegate messageContentNode:self didTapURL:url];
+        } else {
+            [[UIApplication sharedApplication] openURL:url];
+        }
+    }
+}
+
 - (void)setHighlighted:(BOOL)highlighted {
+    if (_isTouchingURL) {
+        return;
+    }
     BOOL didChange = highlighted != self.highlighted;
     [super setHighlighted:highlighted];
     if (didChange) {
@@ -70,6 +134,12 @@
             [self redrawBubbleImageWithColor:_configuration.backgroundColor];
         }
     }
+}
+
+- (void)setDelegate:(id<MXRMessageContentNodeDelegate>)delegate {
+    [super setDelegate:delegate];
+    _delegateImplementsTapURL = [delegate respondsToSelector:@selector(messageContentNode:didTapURL:)];
+    _delegateImplementsLongTapURL = [delegate respondsToSelector:@selector(messageContentNode:didLongTapURL:)];
 }
 
 - (void)copy:(id)sender {
@@ -82,10 +152,46 @@
     [self redrawBubble];
 }
 
+- (NSURL*)urlTouched:(NSSet<UITouch *> *)touches performHighlight:(BOOL)highlight {
+    CGPoint pointInTextNode = [self convertPoint:[[touches anyObject] locationInView:self.view] toNode:_textNode];
+    NSRange range = NSMakeRange(0, 0);
+    id linkAttributeValue = [_textNode linkAttributeValueAtPoint:pointInTextNode attributeName:NULL range:&range];
+    if (range.length == 0 || ![linkAttributeValue isKindOfClass:[NSURL class]]) {
+        return nil;
+    }
+    if (highlight) {
+        [_textNode setHighlightRange:range animated:NO];
+    }
+    return linkAttributeValue;
+}
+
+#pragma mark - Helper
+
++ (NSArray*)applyAttributes:(NSDictionary*)attributes toLinksInMutableAttributedString:(NSMutableAttributedString*)attributedString {
+    NSString* text = attributedString.string;
+    NSDataDetector *linkDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:nil];
+    NSArray <NSTextCheckingResult*>*matches = [linkDetector matchesInString:text options:0 range:NSMakeRange(0, text.length)];
+    for (NSTextCheckingResult* match in matches) {
+        if (match.range.location == NSNotFound || !match.URL) continue;
+        NSMutableDictionary* linkAttrs = [[NSMutableDictionary alloc] initWithDictionary:attributes];
+        linkAttrs[NSLinkAttributeName] = match.URL;
+        [attributedString addAttributes:linkAttrs range:match.range];
+    }
+    return matches;
+}
+
 @end
 
 
 @implementation MXRMessageTextConfiguration
+
+- (instancetype)init {
+    return [self initWithFont:[UIFont systemFontOfSize:15] textColor:[UIColor blackColor] backgroundColor:[UIColor mxr_bubbleLightGrayColor]];
+}
+
+- (instancetype)initWithFont:(UIFont *)font textColor:(UIColor *)textColor backgroundColor:(UIColor *)backgroundColor {
+    return [self initWithTextAttributes:@{NSFontAttributeName: (font ? : [UIFont systemFontOfSize:15]), NSForegroundColorAttributeName: (textColor ? : [UIColor blackColor])} backgroundColor:backgroundColor];
+}
 
 - (instancetype)initWithTextAttributes:(NSDictionary *)attributes backgroundColor:(UIColor *)backgroundColor {
     self = [super init];
@@ -99,16 +205,14 @@
         _textAttributes = [attrsMutable copy];
         _textInset = UIEdgeInsetsMake(8, 12, 8, 12);
         [self setTextInset:UIEdgeInsetsMake(8, 12, 8, 12) adjustMaxCornerRadiusToKeepCircular:YES];
+        _isLinkDetectionEnabled = YES;
+        NSMutableDictionary* linkAttributes = [[NSMutableDictionary alloc] initWithDictionary:(_textAttributes ? : @{})];
+        linkAttributes[NSUnderlineStyleAttributeName] = @(NSUnderlineStyleSingle);
+        linkAttributes[NSUnderlineColorAttributeName] = attributes[NSForegroundColorAttributeName];
+        _linkAttributes = [linkAttributes copy];
+        _linkHighlightStyle = ASTextNodeHighlightStyleDark;
     }
     return self;
-}
-
-- (instancetype)initWithFont:(UIFont *)font textColor:(UIColor *)textColor backgroundColor:(UIColor *)backgroundColor {
-    return [self initWithTextAttributes:@{NSFontAttributeName: (font ? : [UIFont systemFontOfSize:15]), NSForegroundColorAttributeName: (textColor ? : [UIColor blackColor])} backgroundColor:backgroundColor];
-}
-
-- (instancetype)init {
-    return [self initWithFont:[UIFont systemFontOfSize:15] textColor:[UIColor blackColor] backgroundColor:[UIColor mxr_bubbleLightGrayColor]];
 }
 
 - (void)setTextInset:(UIEdgeInsets)textInset {

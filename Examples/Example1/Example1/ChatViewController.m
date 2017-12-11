@@ -61,7 +61,9 @@
     MXRMessageAvatarConfiguration* avatarConfigForOthers = [[MXRMessageAvatarConfiguration alloc] init];
     
     MXRMessageTextConfiguration* textConfigForMe = [[MXRMessageTextConfiguration alloc] initWithFont:nil textColor:[UIColor whiteColor] backgroundColor:[UIColor mxr_fbMessengerBlue]];
+    textConfigForMe.linkHighlightStyle = ASTextNodeHighlightStyleDark;
     MXRMessageTextConfiguration* textConfigForOthers = [[MXRMessageTextConfiguration alloc] initWithFont:nil textColor:[UIColor blackColor] backgroundColor:[UIColor mxr_bubbleLightGrayColor]];
+    textConfigForOthers.linkHighlightStyle = ASTextNodeHighlightStyleLight;
     CGFloat maxCornerRadius = textConfigForMe.maxCornerRadius;
     
     MXRMessageImageConfiguration* imageConfig = [[MXRMessageImageConfiguration alloc] init];
@@ -144,7 +146,7 @@
     [tableNode deselectRowAtIndexPath:indexPath animated:NO];
 }
 
-#pragma mark - MXMessageContentNodeDelegate
+#pragma mark - MXRMessageContentNodeDelegate
 
 - (void)messageContentNode:(MXRMessageContentNode *)node didTapMenuItemWithType:(MXRMessageMenuItemTypes)menuItemType {
     if (menuItemType == MXRMessageMenuItemTypeDelete) {
@@ -166,6 +168,14 @@
         NSLog(@"Single tapped text");
         [self.cellFactory toggleDateHeaderNodeVisibilityForCellNode:cellNode];
     }
+}
+
+- (void)messageContentNode:(MXRMessageContentNode*)node didTapURL:(NSURL*)url {
+    NSLog(@"Tapped URL");
+}
+
+- (void)messageContentNode:(MXRMessageContentNode*)node didLongTapURL:(NSURL*)url {
+    NSLog(@"Long-Tapped URL");
 }
 
 #pragma mark - MXMessageMediaCollectionNodeDelegate
