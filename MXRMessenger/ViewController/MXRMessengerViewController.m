@@ -58,7 +58,7 @@
 
     self.node.tableNode.view.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.node.tableNode.view.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
-    self.node.tableNode.contentInset = UIEdgeInsetsMake(_minimumBottomInset, 0, _topInset, 0);
+    self.node.tableNode.view.contentInset = UIEdgeInsetsMake(_minimumBottomInset, 0, _topInset, 0);
     self.node.tableNode.view.scrollIndicatorInsets = UIEdgeInsetsMake(_minimumBottomInset, 0, _topInset, 0);
     self.node.tableNode.delegate = self;
 

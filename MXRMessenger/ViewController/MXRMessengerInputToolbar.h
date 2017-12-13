@@ -29,21 +29,23 @@
 
 @end
 
-
 @interface MXRMessengerIconNode : ASDisplayNode
 
 @property (nonatomic, strong) UIColor* color;
 
 @end
 
-
 @interface MXRMessengerSendIconNode : MXRMessengerIconNode
 @end
-
 
 @interface MXRMessengerPlusIconNode : MXRMessengerIconNode
 @end
 
+@interface MXRMessengerMicIconNode : MXRMessengerIconNode
+@end
+
+@interface MXRMessengerEmojiIconNode : MXRMessengerIconNode
+@end
 
 @interface MXRMessengerIconButtonNode : ASControlNode
 
