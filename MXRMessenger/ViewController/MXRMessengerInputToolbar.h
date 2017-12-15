@@ -12,7 +12,7 @@
 
 @class MXRMessengerIconButtonNode;
 
-@interface MXRMessengerInputToolbar : ASDisplayNode
+@interface MXRMessengerInputToolbar : ASDisplayNode <ASEditableTextNodeDelegate>
 
 @property (nonatomic, strong, readonly) MXRGrowingEditableTextNode* textInputNode;
 @property (nonatomic, strong) ASDisplayNode* leftButtonsNode;
@@ -22,6 +22,7 @@
 @property (nonatomic, assign, readonly) CGFloat heightOfTextNodeWithOneLineOfText;
 @property (nonatomic, strong, readonly) UIFont* font;
 @property (nonatomic, strong, readonly) UIColor* tintColor;
+@property (assign, nonatomic) id<ASEditableTextNodeDelegate>delegate;
 
 - (instancetype)initWithFont:(UIFont*)font placeholder:(NSString*)placeholder tintColor:(UIColor*)tintColor;
 

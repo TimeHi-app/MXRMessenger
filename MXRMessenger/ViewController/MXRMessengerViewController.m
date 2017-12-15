@@ -17,6 +17,7 @@
 @property (nonatomic, assign) CGFloat minimumBottomInset;
 @property (nonatomic, assign) CGFloat topInset;
 
+
 @end
 
 @implementation MXRMessengerViewController
@@ -52,8 +53,12 @@
     }
 
     CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
-    _toolbarContainerView = [[MXRMessengerInputToolbarContainerView alloc] initWithMessengerInputToolbar:self.toolbar constrainedSize:ASSizeRangeMake(CGSizeMake(screenWidth, 0), CGSizeMake(screenWidth, CGFLOAT_MAX))];
-    _minimumBottomInset = self.toolbarContainerView.toolbarNode.calculatedSize.height;
+    
+    _toolbarContainerView = [[MXRMessengerInputToolbarContainerView alloc] initWithMessengerInputToolbar:self.toolbar constrainedSize:ASSizeRangeMake(CGSizeMake(screenWidth, 0), CGSizeMake(screenWidth, CGFLOAT_MAX)) andNode:_myNode];
+    if (_myNode)
+        _minimumBottomInset = self.toolbarContainerView.toolbarNode.calculatedSize.height + 50.0f;
+    else
+        _minimumBottomInset = self.toolbarContainerView.toolbarNode.calculatedSize.height;
     _topInset = [self calculateTopInset];
 
     self.node.tableNode.view.separatorStyle = UITableViewCellSeparatorStyleNone;
@@ -174,5 +179,15 @@
 - (BOOL)canBecomeFirstResponder { return YES; }
 - (UIView *)inputAccessoryView { return self.toolbarContainerView; }
 
+#pragma mark - PrivateMethods
+-(void)updateToolbar {
+    CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
+    _toolbarContainerView = nil;
+    _toolbarContainerView = [[MXRMessengerInputToolbarContainerView alloc] initWithMessengerInputToolbar:self.toolbar constrainedSize:ASSizeRangeMake(CGSizeMake(screenWidth, 0), CGSizeMake(screenWidth, CGFLOAT_MAX)) andNode:_myNode];
+    if (_myNode)
+        _minimumBottomInset = self.toolbarContainerView.toolbarNode.calculatedSize.height + 50.0f;
+    else
+        _minimumBottomInset = self.toolbarContainerView.toolbarNode.calculatedSize.height;
+}
 
 @end

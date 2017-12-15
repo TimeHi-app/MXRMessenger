@@ -10,23 +10,21 @@
 
 static NSString* MXRNewCalculatedSizeNotification = @"MXRNewCalculatedSizeNotification";
 
-@interface MXRNewSizeNotifyingNode : ASDisplayNode
 
-@property (nonatomic, strong) ASDisplayNode* innerNode;
-
-@end
 
 @implementation MXRMessengerInputToolbarContainerView {
     id _newSizeNotification;
-    MXRNewSizeNotifyingNode* _containerNode;
 }
 
-- (instancetype)initWithMessengerInputToolbar:(MXRMessengerInputToolbar *)toolbarNode constrainedSize:(ASSizeRange)constrainedSize {
+- (instancetype)initWithMessengerInputToolbar:(MXRMessengerInputToolbar *)toolbarNode constrainedSize:(ASSizeRange)constrainedSize andNode:(ASDisplayNode *)node {
     self = [super initWithFrame:CGRectZero];
     if (self) {
         _toolbarNode = toolbarNode;
+        
         _containerNode = [[MXRNewSizeNotifyingNode alloc] init];
         _containerNode.innerNode = _toolbarNode;
+        _containerNode.node = node;
+        [_toolbarNode layoutSpecThatFits:constrainedSize];
         [_containerNode layoutThatFits:constrainedSize];
         _containerNode.frame = CGRectMake(0, 0, _containerNode.calculatedSize.width, _containerNode.calculatedSize.height);
         self.frame = _containerNode.frame;
@@ -84,7 +82,17 @@ static NSString* MXRNewCalculatedSizeNotification = @"MXRNewCalculatedSizeNotifi
 }
 
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
-    return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsZero child:_innerNode];
+    NSMutableArray *verticalChildren = [NSMutableArray array];
+    
+    ASStackLayoutSpec *containerStack = [ASStackLayoutSpec verticalStackLayoutSpec];
+    
+    if (_node)
+        [verticalChildren addObject:[ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(10, 0, 0, 0) child:_node]];
+    [verticalChildren addObject:[ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsZero child:_innerNode]];
+    
+    containerStack.children = verticalChildren;
+    
+    return containerStack;
 }
 
 @end

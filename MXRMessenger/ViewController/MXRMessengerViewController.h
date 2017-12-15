@@ -15,6 +15,7 @@
 @interface MXRMessengerViewController : ASViewController <MXRMessengerNode*> <ASTableDelegate>
 
 @property (nonatomic, strong, readonly) MXRMessengerInputToolbar* toolbar;
+@property (nonatomic, strong) ASDisplayNode *myNode;
 
 - (instancetype)initWithNode:(MXRMessengerNode *)node toolbar:(MXRMessengerInputToolbar*)toolbar NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithToolbar:(MXRMessengerInputToolbar*)toolbar;
@@ -27,6 +28,8 @@
 - (CGFloat)calculateTopInset;
 
 - (void)dismissKeyboard;
+
+-(void)updateToolbar;
 
 
 @end

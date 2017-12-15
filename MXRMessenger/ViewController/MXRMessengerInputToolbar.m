@@ -46,6 +46,7 @@
         _textInputBackgroundNode.displaysAsynchronously = NO; // otherwise it doesnt appear until viewDidAppear
         
         _textInputNode = [[MXRGrowingEditableTextNode alloc] init];
+        
         _textInputNode.tintColor = tintColor;
         _textInputNode.maximumLinesToDisplay = 6;
         _textInputNode.typingAttributes = @{NSFontAttributeName: font, NSForegroundColorAttributeName: [UIColor blackColor]};
@@ -61,6 +62,16 @@
         _finalInsets = UIEdgeInsetsMake(8, 0, 10, 0);
     }
     return self;
+}
+
+-(void)setDelegate:(id<ASEditableTextNodeDelegate>)delegate {
+    _textInputNode.delegate = delegate;
+}
+
+-(void)setRightButtonsNode:(ASDisplayNode *)rightButtonsNode {
+    _rightButtonsNode = rightButtonsNode;
+    
+    [self invalidateCalculatedLayout];
 }
 
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
