@@ -53,7 +53,7 @@ extern __attribute__((overloadable)) NSData * UIImageAnimatedGIFRepresentation(U
 /**
  
  */
-@interface AnimatedGIFImageSerialization : NSObject
+@interface GIFImageSerialization : NSObject
 
 /// @name Creating an Animated GIF
 

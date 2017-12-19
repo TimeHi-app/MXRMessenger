@@ -9,7 +9,7 @@
 #import <MXRMessenger/UIImage+MXRMessenger.h>
 
 #import <MXRMessenger/UIBezierPath+MXRMessenger.h>
-#import <MXRMessenger/AnimatedGIFImageSerialization.h>
+#import <MXRMessenger/GIFImageSerialization.h>
 
 @implementation UIImage (MXRMessenger)
 
@@ -83,7 +83,7 @@
 
 - (NSString *)mimeTypeForImage:(UIImage *)image; {
     NSError *error;
-    NSData *data = [AnimatedGIFImageSerialization animatedGIFDataWithImage:image error:&error];
+    NSData *data = [GIFImageSerialization animatedGIFDataWithImage:image error:&error];
     
     uint8_t c;
     [data getBytes:&c length:1];

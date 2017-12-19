@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import "AnimatedGIFImageSerialization.h"
+#import "GIFImageSerialization.h"
 
 #import <ImageIO/ImageIO.h>
 #import <MobileCoreServices/MobileCoreServices.h>
@@ -140,7 +140,7 @@ _error: {
 }
 }
 
-@implementation AnimatedGIFImageSerialization
+@implementation GIFImageSerialization
 
 + (UIImage *)imageWithData:(NSData *)data
                      error:(NSError * __autoreleasing *)error
