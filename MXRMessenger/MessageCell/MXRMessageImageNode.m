@@ -40,7 +40,7 @@
         } else {
             _imageNode = [[ASNetworkImageNode alloc] init];
         }
-        [self setImageModificationBlockForSize:configuration.placeholderImageSize];
+//        [self setImageModificationBlockForSize:configuration.placeholderImageSize];
         
         if (configuration.placeholderImage) {
             _imageNode.defaultImage = configuration.placeholderImage;
@@ -97,11 +97,6 @@
     // give ASyncDisplayKit a hint to its target size so it decodes correctly. This is
     // why we set its frame.
     
-    if ([[image mimeTypeForImage:image] isEqualToString:@"image/gif"]) {
-        self.view.layer.cornerRadius = 10.0f;
-        self.clipsToBounds = YES;
-    }
-    
     CGFloat scaleFactor = (_maxSize.width / image.size.width);
     CGFloat scaleFactor2 = (_maxSize.height / image.size.height);
     CGFloat scale = MIN(scaleFactor2, scaleFactor);
@@ -109,6 +104,10 @@
     CGSize newSize = CGSizeMake(image.size.width * scale, image.size.height * scale);
     _imageNode.frame = (CGRect){CGPointZero, newSize};
     [self setImageModificationBlockForSize:newSize];
+    
+    self.view.layer.cornerRadius = 17.0f;
+    self.clipsToBounds = YES;
+    
     _imageNode.style.preferredSize = _imageNode.frame.size;
     self.style.preferredSize = _imageNode.style.preferredSize;
     [self setNeedsLayout];
