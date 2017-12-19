@@ -46,6 +46,7 @@
 - (MXRMessageTextCellNodeBlock)cellNodeBlockWithText:(NSString*)text tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
 - (MXRMessageImageCellNodeBlock)cellNodeBlockWithImageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
 - (MXRMessageMediaCollectionCellNodeBlock)cellNodeBlockWithMedia:(NSArray<id<MXRMessengerMedium>>*)media tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
+- (MXRMessageSystemCellNodeBlock)cellNodeBlockWithSystem:(NSString *)system tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
 
 - (ASDisplayNode*)headerNodeFromDate:(NSDate*)date;
 - (void)toggleDateHeaderNodeVisibilityForCellNode:(MXRMessageCellNode*)cellNode;
@@ -69,7 +70,8 @@
 @property (nonatomic, strong, readonly) MXRMessageTextConfiguration* textConfig;
 @property (nonatomic, strong, readonly) MXRMessageImageConfiguration* imageConfig;
 @property (nonatomic, strong, readonly) MXRMessageMediaCollectionConfiguration* mediaCollectionConfig;
+@property (nonatomic, strong, readonly) MXRMessageSystemConfiguration *systemConfig;
 
-- (instancetype)initWithLayoutConfig:(MXRMessageCellLayoutConfiguration*)layoutConfig avatarConfig:(MXRMessageAvatarConfiguration*)avatarConfig textConfig:(MXRMessageTextConfiguration*)textConfig imageConfig:(MXRMessageImageConfiguration*)imageConfig mediaCollectionConfig:(MXRMessageMediaCollectionConfiguration*)mediaCollectionConfig;
+- (instancetype)initWithLayoutConfig:(MXRMessageCellLayoutConfiguration*)layoutConfig avatarConfig:(MXRMessageAvatarConfiguration*)avatarConfig textConfig:(MXRMessageTextConfiguration*)textConfig imageConfig:(MXRMessageImageConfiguration*)imageConfig mediaCollectionConfig:(MXRMessageMediaCollectionConfiguration*)mediaCollectionConfig systemConfig:(MXRMessageSystemConfiguration*)systemConfig;
 
 @end

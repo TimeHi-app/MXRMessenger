@@ -79,6 +79,10 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
     return (MXRMessageMediaCollectionCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeMediaCollectionOnly text:nil imageURL:nil showsPlayButton:YES media:media tableNode:tableNode row:row];
 }
 
+- (MXRMessageSystemCellNodeBlock)cellNodeBlockWithSystem:(NSString *)system tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
+    return (MXRMessageSystemCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeSystemOnly text:system imageURL:nil showsPlayButton:NO media:nil tableNode:tableNode row:row];
+}
+
 - (ASCellNodeBlock)cellNodeBlockWithType:(MXRMessageContentType)type text:(NSString *)text imageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton media:(NSArray<id<MXRMessengerMedium>> *)media tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
     // we query the datasource before entering block, all other computations can go in the async block
     
@@ -129,6 +133,9 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             MXRMessageMediaCollectionNode* mediaCollectionNode = [[MXRMessageMediaCollectionNode alloc] initWithMedia:media configuration:config.mediaCollectionConfig cornersToApplyMaxRadius:cornersHavingRadius];
             mediaCollectionNode.mediaCollectionDelegate = self.mediaCollectionDelegate;
             cell.messageContentNode = mediaCollectionNode;
+        } else if (type == MXRMessageContentTypeSystemOnly) {
+            MXRMessageSystemNode *systemNode = [[MXRMessageSystemNode alloc] initWithText:text configuration:config.systemConfig cornersToApplyMaxRadius:cornersHavingRadius];
+            cell.messageContentNode = systemNode;
         }
         
         if (context.isShowingDate) {
@@ -303,10 +310,10 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
 @implementation MXRMessageCellConfiguration
 
 - (instancetype)init {
-    return [self initWithLayoutConfig:nil avatarConfig:nil textConfig:nil imageConfig:nil mediaCollectionConfig:nil];
+    return [self initWithLayoutConfig:nil avatarConfig:nil textConfig:nil imageConfig:nil mediaCollectionConfig:nil systemConfig:nil];
 }
 
-- (instancetype)initWithLayoutConfig:(MXRMessageCellLayoutConfiguration *)layoutConfig avatarConfig:(MXRMessageAvatarConfiguration *)avatarConfig textConfig:(MXRMessageTextConfiguration *)textConfig imageConfig:(MXRMessageImageConfiguration *)imageConfig mediaCollectionConfig:(MXRMessageMediaCollectionConfiguration *)mediaCollectionConfig {
+- (instancetype)initWithLayoutConfig:(MXRMessageCellLayoutConfiguration *)layoutConfig avatarConfig:(MXRMessageAvatarConfiguration *)avatarConfig textConfig:(MXRMessageTextConfiguration *)textConfig imageConfig:(MXRMessageImageConfiguration *)imageConfig mediaCollectionConfig:(MXRMessageMediaCollectionConfiguration *)mediaCollectionConfig systemConfig:(MXRMessageSystemConfiguration*)systemConfig {
     self = [super init];
     if (self) {
         _layoutConfig = layoutConfig ? : [[MXRMessageCellLayoutConfiguration alloc] init];
@@ -314,6 +321,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
         _textConfig = textConfig ? : [[MXRMessageTextConfiguration alloc] init];
         _imageConfig = imageConfig ? : [[MXRMessageImageConfiguration alloc] init];
         _mediaCollectionConfig = mediaCollectionConfig ? : [[MXRMessageMediaCollectionConfiguration alloc] init];
+        _systemConfig = systemConfig ? : [[MXRMessageSystemConfiguration alloc] init];
     }
     return self;
 }

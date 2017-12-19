@@ -12,6 +12,7 @@
 #import "MXRMessageTextNode.h"
 #import "MXRMessageImageNode.h"
 #import "MXRMessageMediaCollectionNode.h"
+#import "MXRMessageSystemNode.h"
 
 @class MXRMessageCellLayoutConfiguration;
 
@@ -65,6 +66,9 @@ typedef MXRMessageImageCellNode* (^MXRMessageImageCellNodeBlock)(void);
 
 typedef MXRMessageCellNode<MXRMessageMediaCollectionNode*> MXRMessageMediaCollectionCellNode;
 typedef MXRMessageMediaCollectionCellNode* (^MXRMessageMediaCollectionCellNodeBlock)(void);
+
+typedef MXRMessageCellNode<MXRMessageSystemNode*> MXRMessageSystemCellNode;
+typedef MXRMessageSystemCellNode* (^MXRMessageSystemCellNodeBlock)(void);
 
 @interface MXRMessageCellLayoutConfiguration : NSObject <NSCopying>
 

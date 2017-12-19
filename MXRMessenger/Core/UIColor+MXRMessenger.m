@@ -18,6 +18,18 @@
     return [UIColor colorWithRed:0.00 green:0.52 blue:1.00 alpha:1.0];
 }
 
++ (UIColor *)mxr_bubbleBlueGrey {
+    return [UIColor colorWithRed:160/255.0f green:177/255.0f blue:196/255.0f alpha:1.0f];
+}
+
++ (UIColor *)mxr_paleGrey {
+    return [UIColor colorWithRed:229/255.0f green:229/255.0f blue:234/255.0f alpha:1.0f];
+}
+
++ (UIColor *)mxr_greyBotCell {
+    return [UIColor colorWithRed:249/255.0f green:249/255.0f blue:249/255.0f alpha:1.0f];
+}
+
 - (UIColor *)mxr_lighterColor {
     CGFloat h, s, b, a;
     if ([self getHue:&h saturation:&s brightness:&b alpha:&a])

@@ -12,6 +12,9 @@
 
 + (UIColor*)mxr_bubbleLightGrayColor;
 + (UIColor*)mxr_fbMessengerBlue;
++ (UIColor *)mxr_bubbleBlueGrey;
++ (UIColor *)mxr_paleGrey;
++ (UIColor *)mxr_greyBotCell;
 
 - (UIColor *)mxr_lighterColor;
 - (UIColor *)mxr_darkerColor;

@@ -96,6 +96,12 @@
     // The next layout pass may happen after the image finishes decoding, so we need to
     // give ASyncDisplayKit a hint to its target size so it decodes correctly. This is
     // why we set its frame.
+    
+    if ([[image mimeTypeForImage:image] isEqualToString:@"image/gif"]) {
+        self.view.layer.cornerRadius = 10.0f;
+        self.clipsToBounds = YES;
+    }
+    
     CGFloat scaleFactor = (_maxSize.width / image.size.width);
     CGFloat scaleFactor2 = (_maxSize.height / image.size.height);
     CGFloat scale = MIN(scaleFactor2, scaleFactor);

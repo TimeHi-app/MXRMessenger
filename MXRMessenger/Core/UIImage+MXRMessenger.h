@@ -19,12 +19,16 @@
                                              color:(UIColor *)fillColor
                            cornersToApplyMaxRadius:(UIRectCorner)roundedCorners;
 
-+ (asimagenode_modification_block_t)mxr_imageModificationBlockToScaleToSize:(CGSize)size cornerRadius:(CGFloat)cornerRadius;
++ (asimagenode_modification_block_t)mxr_imageModificationBlockToScaleToSize:(CGSize)size
+                                                               cornerRadius:(CGFloat)cornerRadius;
+
 + (asimagenode_modification_block_t)mxr_imageModificationBlockToScaleToSize:(CGSize)size
                                                        maximumCornerRadius:(CGFloat)maxCornerRadius
                                                        minimumCornerRadius:(CGFloat)minCornerRadius
                                                                borderColor:(UIColor*)borderColor
                                                                borderWidth:(CGFloat)borderWidth
                                                    cornersToApplyMaxRadius:(UIRectCorner)roundedCorners;
+
+- (NSString *)mimeTypeForImage:(UIImage *)image;
 
 @end
