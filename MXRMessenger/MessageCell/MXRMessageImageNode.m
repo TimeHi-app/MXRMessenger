@@ -40,7 +40,7 @@
         } else {
             _imageNode = [[ASNetworkImageNode alloc] init];
         }
-//        [self setImageModificationBlockForSize:configuration.placeholderImageSize];
+        [self setImageModificationBlockForSize:configuration.placeholderImageSize];
         
         if (configuration.placeholderImage) {
             _imageNode.defaultImage = configuration.placeholderImage;

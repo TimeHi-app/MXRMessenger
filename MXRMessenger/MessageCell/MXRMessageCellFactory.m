@@ -116,6 +116,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             if (avatarConfig.cornerRadius > 0) {
                 avatarNode.imageModificationBlock = [UIImage mxr_imageModificationBlockToScaleToSize:avatarConfig.size cornerRadius:avatarConfig.cornerRadius];
             }
+            avatarNode.defaultImage = self.avatarPlaceholder;
             avatarNode.URL = MXRMessageContextNextHasSameSender(context) ? nil : avatarURL;
             cell.avatarNode = avatarNode;
         }

@@ -41,6 +41,8 @@
 @property (nonatomic, weak) id<MXRMessageContentNodeDelegate> contentNodeDelegate;
 @property (nonatomic, weak) id<MXRMessageMediaCollectionNodeDelegate> mediaCollectionDelegate;
 
+@property (strong, nonatomic) UIImage *avatarPlaceholder;
+
 - (instancetype)initWithCellConfigForMe:(MXRMessageCellConfiguration*)cellConfigForMe cellConfigForOthers:(MXRMessageCellConfiguration*)cellConfigForOthers;
 
 - (MXRMessageTextCellNodeBlock)cellNodeBlockWithText:(NSString*)text tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
