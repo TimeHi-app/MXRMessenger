@@ -263,10 +263,6 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             [weakSelf updateRoundedCornersOfCellNode:oldMostRecentNode];
         }
         
-        [tableNode performBatchAnimated:animated updates:^{
-            [tableNode reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:1 inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
-        } completion:completion];
-        
         NSIndexPath* oldOldestIndexPath = [oldOldestNode indexPath];
         BOOL oldOldestNeedsReload = weakSelf.isAutomaticallyManagingDateHeaders && oldOldestIndexPath && oldOldestIndexPath.row != ([tableNode numberOfRowsInSection:0] - 1);
         if (oldOldestNeedsReload) {
