@@ -13,6 +13,7 @@
 #import "MXRMessageImageNode.h"
 #import "MXRMessageMediaCollectionNode.h"
 #import "MXRMessageSystemNode.h"
+#import "MXRMessageAudioNode.h"
 
 @class MXRMessageCellLayoutConfiguration;
 
@@ -69,6 +70,9 @@ typedef MXRMessageMediaCollectionCellNode* (^MXRMessageMediaCollectionCellNodeBl
 
 typedef MXRMessageCellNode<MXRMessageSystemNode*> MXRMessageSystemCellNode;
 typedef MXRMessageSystemCellNode* (^MXRMessageSystemCellNodeBlock)(void);
+
+typedef MXRMessageCellNode<MXRMessageAudioNode*> MXRMessageAudioCellNode;
+typedef MXRMessageAudioCellNode* (^MXRMessageAudioCellNodeBlock)(void);
 
 @interface MXRMessageCellLayoutConfiguration : NSObject <NSCopying>
 
