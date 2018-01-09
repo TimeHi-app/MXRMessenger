@@ -25,4 +25,6 @@
 
 @interface MXRMessageAudioConfiguration : MXRMessageNodeConfiguration
 
+-(instancetype)initWithBackgroundColor:(UIColor *)backgroundColor;
+
 @end

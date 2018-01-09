@@ -71,6 +71,9 @@
     MXRMessageMediaCollectionConfiguration* mediaCollectionConfig = [[MXRMessageMediaCollectionConfiguration alloc] init];
     mediaCollectionConfig.maxCornerRadius = maxCornerRadius;
     
+    MXRMessageAudioConfiguration *audioConfig = [[MXRMessageAudioConfiguration alloc] initWithBackgroundColor:[UIColor mxr_bubbleBlueGrey]];
+    audioConfig.maxCornerRadius = maxCornerRadius;
+    
     MXRMessageSystemConfiguration *systemConfig = [[MXRMessageSystemConfiguration alloc] initWithFont:nil textColor:[UIColor blueColor] backgroundColor:[UIColor mxr_bubbleBlueGrey]];
     
     textConfigForMe.menuItemTypes |= MXRMessageMenuItemTypeDelete;
@@ -80,8 +83,8 @@
     CGFloat s = [UIScreen mainScreen].scale;
     imageConfig.borderWidth = s > 0 ? (1.0f/s) : 0.5f;
     
-    MXRMessageCellConfiguration* cellConfigForMe = [[MXRMessageCellConfiguration alloc] initWithLayoutConfig:layoutConfigForMe avatarConfig:avatarConfigForMe textConfig:textConfigForMe imageConfig:imageConfig mediaCollectionConfig:mediaCollectionConfig systemConfig:systemConfig];
-    MXRMessageCellConfiguration* cellConfigForOthers = [[MXRMessageCellConfiguration alloc] initWithLayoutConfig:layoutConfigForOthers avatarConfig:avatarConfigForOthers textConfig:textConfigForOthers imageConfig:imageConfig mediaCollectionConfig:mediaCollectionConfig systemConfig:systemConfig];
+    MXRMessageCellConfiguration* cellConfigForMe = [[MXRMessageCellConfiguration alloc] initWithLayoutConfig:layoutConfigForMe avatarConfig:avatarConfigForMe textConfig:textConfigForMe imageConfig:imageConfig mediaCollectionConfig:mediaCollectionConfig systemConfig:systemConfig audioConfig:audioConfig];
+    MXRMessageCellConfiguration* cellConfigForOthers = [[MXRMessageCellConfiguration alloc] initWithLayoutConfig:layoutConfigForOthers avatarConfig:avatarConfigForOthers textConfig:textConfigForOthers imageConfig:imageConfig mediaCollectionConfig:mediaCollectionConfig systemConfig:systemConfig audioConfig:audioConfig];
     
     self.cellFactory = [[MXRMessageCellFactory alloc] initWithCellConfigForMe:cellConfigForMe cellConfigForOthers:cellConfigForOthers];
     self.cellFactory.dataSource = self;
@@ -133,14 +136,15 @@
 
 - (ASCellNodeBlock)tableNode:(ASTableNode *)tableNode nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath {
     Message* message = self.messages[indexPath.row];
-    if (message.media.count > 1) {
-        return [self.cellFactory cellNodeBlockWithMedia:message.media tableNode:tableNode row:indexPath.row];
-    } else if (message.media.count == 1) {
-        MessageMedium* medium = message.media.firstObject;
-        return [self.cellFactory cellNodeBlockWithImageURL:medium.photoURL showsPlayButton:(medium.videoURL != nil) tableNode:tableNode row:indexPath.row];
-    } else {
-        return [self.cellFactory cellNodeBlockWithSystem:message.text tableNode:tableNode row:indexPath.row];
-    }
+//    if (message.media.count > 1) {
+//        return [self.cellFactory cellNodeBlockWithMedia:message.media tableNode:tableNode row:indexPath.row];
+//    } else if (message.media.count == 1) {
+//        MessageMedium* medium = message.media.firstObject;
+//        return [self.cellFactory cellNodeBlockWithImageURL:medium.photoURL showsPlayButton:(medium.videoURL != nil) tableNode:tableNode row:indexPath.row];
+//    } else {
+//        return [self.cellFactory cellNodeBlockWithSystem:message.text tableNode:tableNode row:indexPath.row];
+        return [self.cellFactory cellNodeBlockWithAudio:message.media tableNode:tableNode row:indexPath.row];
+//    }
 }
 
 - (void)tableNode:(ASTableNode *)tableNode didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
