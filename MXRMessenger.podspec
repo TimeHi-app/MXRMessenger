@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'MXRMessenger'
-  s.version          = '0.2.1'
+  s.version          = '0.2.0'
   s.summary          = 'MXRMessenger is a lightweight UI chat component built on top of Texture.'
 
   s.description      = <<-DESC
@@ -31,7 +31,7 @@ The MessageCell subspec features a Facebook-style chat bubble-grouping system.
     core.source_files = [
       'MXRMessenger/Core/**/*.{h,m}'
     ]
-    core.dependency 'Texture/Core', '~> 2.4.0'
+    core.dependency 'Texture/Core', '~> 2.0'
   end
 
   s.subspec 'ViewController' do |vc|
