@@ -125,44 +125,6 @@
 
 
 @implementation MXRMessengerSendIconNode
-
-//+ (void)drawRect:(CGRect)bounds withParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing {
-//
-//    CGContextRef context = UIGraphicsGetCurrentContext();
-//    CGContextSaveGState(context);
-//
-//    CGFloat halfStrokeWidth = 1.0f;
-//    CGFloat hsw = halfStrokeWidth;
-//
-//    CGFloat sw = bounds.size.width / 44.0f;
-//    CGFloat sh = bounds.size.height / 44.0f;
-//    CGPoint p0 = CGPointMake(hsw, hsw);
-//    CGPoint p1 = CGPointMake(44.0f*sw - hsw, 22.0f*sh);
-//    CGPoint p2 = CGPointMake(hsw, 44.0f*sh - hsw);
-//    CGPoint p3 = CGPointMake(6.0f*sw, 27.0f*sh);
-//    CGPoint p4 = CGPointMake(32.0f*sw, 22.0f*sh);
-//    CGPoint p5 = CGPointMake(6.0f*sw, 17.0f*sh);
-//
-//    CGPoint points[6] = { p0, p1, p2, p3, p4, p5 };
-//
-//    UIColor* color = (UIColor*)parameters;
-//    [color setFill];
-//    [color setStroke];
-//
-//    UIBezierPath *path = [UIBezierPath bezierPath];
-//    [path setLineWidth:2*halfStrokeWidth];
-//    [path setLineJoinStyle:kCGLineJoinRound];
-//    [path moveToPoint:p0];
-//    for (int i = 1; i < 6; i++) {
-//        [path addLineToPoint:points[i]];
-//    }
-//    [path closePath];
-//    [path fill];
-//    [path stroke];
-//
-//    CGContextRestoreGState(context);
-//}
-
 + (void)drawRect:(CGRect)bounds withParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing {
     UIColor* color = [UIColor colorWithRed: 0.242 green: 0.289 blue: 0.998 alpha: 1];
     
@@ -199,41 +161,6 @@
 
 
 @implementation MXRMessengerPlusIconNode 
-
-//+ (void)drawRect:(CGRect)bounds withParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing {
-//
-//    CGContextRef context = UIGraphicsGetCurrentContext();
-//    CGContextSaveGState(context);
-//
-//    UIColor* color = (UIColor*)parameters;
-//    [color setStroke];
-//    [color setFill];
-//    CGFloat strokeWidth = 2.0f;
-//    CGFloat halfPlusLength = ceilf(0.15f*bounds.size.width);
-//
-//    CGRect circleContainerRect = CGRectInset(bounds, strokeWidth/2.0f, strokeWidth/2.0f);
-//    UIBezierPath* circlePath = [UIBezierPath bezierPathWithOvalInRect:circleContainerRect];
-//    [circlePath setLineWidth:strokeWidth];
-//    [circlePath stroke];
-//    [circlePath fill];
-//
-//    UIBezierPath* plusPath = [UIBezierPath bezierPath];
-//    [plusPath setLineWidth:strokeWidth];
-//    [plusPath setLineCapStyle:kCGLineCapRound];
-//    CGFloat centerX = CGRectGetMidX(bounds);
-//    CGFloat centerY = CGRectGetMidY(bounds);
-//
-//    [plusPath moveToPoint:CGPointMake(centerX, centerY - halfPlusLength)];
-//    [plusPath addLineToPoint:CGPointMake(centerX, centerY + halfPlusLength)];
-//    [plusPath moveToPoint:CGPointMake(centerX - halfPlusLength, centerY)];
-//    [plusPath addLineToPoint:CGPointMake(centerX + halfPlusLength, centerY)];
-//
-//    [[UIColor whiteColor] setStroke];
-//    [plusPath stroke];
-//
-//    CGContextRestoreGState(context);
-//}
-
 + (void)drawRect:(CGRect)bounds withParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing {
     UIColor* color2 = [UIColor colorWithRed: 0.5 green: 0.5 blue: 0.5 alpha: 1];
     

@@ -9,10 +9,16 @@
 #import "AppDelegate.h"
 
 #import "ChatsListViewController.h"
+#import "AsyncDisplayKit+Debug.h"
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+//    [ASControlNode setEnableHitTestDebug:YES];
+    NSError *error;
+    [[AVAudioSession sharedInstance] setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:&error];
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback withOptions:AVAudioSessionCategoryOptionDuckOthers error:&error];
+    
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     UINavigationController* nav = [[UINavigationController alloc] initWithRootViewController:[ChatsListViewController new]];
     nav.navigationBar.translucent = NO;
