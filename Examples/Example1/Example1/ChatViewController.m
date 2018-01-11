@@ -22,7 +22,12 @@
 
 @end
 
-@implementation ChatViewController
+@implementation ChatViewController {
+    CGPoint pointAudioStart;
+    AVAudioRecorder *audioRecorder;
+    NSTimer *timerAudio;
+    NSDate *dateAudioStart;
+}
 
 - (instancetype)initWithPerson:(Person *)person {
     self = [super init];
@@ -30,24 +35,101 @@
         self.title = person.name;
         
         MXRMessengerIconButtonNode* addPhotosBarButtonButtonNode = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerPlusIconNode alloc] init] matchingToolbar:self.toolbar];
-        [addPhotosBarButtonButtonNode addTarget:self action:@selector(tapAddPhotos:) forControlEvents:ASControlNodeEventTouchUpInside];
+//        [addPhotosBarButtonButtonNode addTarget:self action:@selector(tapAddPhotos:) forControlEvents:ASControlNodeEventTouchUpInside];
         self.toolbar.leftButtonsNode = addPhotosBarButtonButtonNode;
-        [self.toolbar.defaultSendButton addTarget:self action:@selector(tapSend:) forControlEvents:ASControlNodeEventTouchUpInside];
+//        [self.toolbar.defaultSendButton addTarget:self action:@selector(tapSend:) forControlEvents:ASControlNodeEventTouchUpInside];
         
         _otherPersonsAvatar = person.avatarURL;
     }
     return self;
 }
 
+-(void)audioRecorderGesture:(UILongPressGestureRecognizer *)gestureRecognizer {
+    switch (gestureRecognizer.state) {
+        case UIGestureRecognizerStateBegan: {
+            pointAudioStart = [gestureRecognizer locationInView:self.view];
+            [self audioRecorderInit];
+            [self audioRecorderStart];
+            break;
+        }
+        case UIGestureRecognizerStateChanged: {
+            break;
+        }
+        case UIGestureRecognizerStateEnded: {
+            CGPoint pointAudioStop = [gestureRecognizer locationInView:self.view];
+            CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
+            [self audioRecorderStop:(distanceAudio < 50)];
+            break;
+        }
+        case UIGestureRecognizerStatePossible:
+        case UIGestureRecognizerStateCancelled:
+        case UIGestureRecognizerStateFailed:
+            break;
+    }
+}
+
+-(void)audioRecorderInit {
+    NSString *dir = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
+    NSString *path = [dir stringByAppendingString:@"audioRecorder.mp3"];
+    NSError *error;
+    
+    NSDictionary *settings = @{
+                               AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+                               AVSampleRateKey : @(44100),
+                               AVNumberOfChannelsKey : @(2)
+                               };
+    
+    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:path] settings:settings error:&error];
+    audioRecorder.meteringEnabled = YES;
+    
+    [audioRecorder prepareToRecord];
+}
+
+-(void)audioRecorderStart {
+    [audioRecorder record];
+    
+    dateAudioStart = [NSDate date];
+    
+    timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
+    [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
+    
+    [self audioRecorderUpdate];
+}
+
+-(void)audioRecorderStop:(BOOL)sending {
+    [audioRecorder stop];
+    
+    [timerAudio invalidate];
+    timerAudio = nil;
+    
+    if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
+        
+    } else {
+        [audioRecorder deleteRecording];
+    }
+}
+
+-(void)audioRecorderUpdate {
+    NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:dateAudioStart];
+    int millisec = (int) (interval * 100) % 100;
+    int seconds = (int) interval % 60;
+    int minutes = (int) interval / 60;
+    //    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.navigationItem.title = self.title;
     
-    
-    
     self.node.tableNode.delegate = self; // actually redundant bc MXRMessenger sets it
     self.node.tableNode.dataSource = self;
     self.node.tableNode.allowsSelection = YES;
+    
+    UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(audioRecorderGesture:)];
+    gesture.minimumPressDuration = 1;
+    gesture.cancelsTouchesInView = NO;
+    [self.toolbar.rightButtonsNode.view addGestureRecognizer:gesture];
+    
     
     [self customizeCellFactory];
     [self fetchMessages];

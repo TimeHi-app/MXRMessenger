@@ -14,6 +14,11 @@
     ASImageNode* _textInputBackgroundNode;
     UIEdgeInsets _textInputInsets;
     UIEdgeInsets _finalInsets;
+    
+    CGPoint pointAudioStart;
+    AVAudioRecorder *audioRecorder;
+    NSTimer *timerAudio;
+    NSDate *dateAudioStart;
 }
 
 - (instancetype)init {
@@ -57,7 +62,12 @@
         _textInputNode.clipsToBounds = YES;
         
         _defaultSendButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerSendIconNode alloc] init] matchingToolbar:self];
-        _rightButtonsNode = _defaultSendButton;
+//        _rightButtonsNode = _defaultSendButton;
+        
+        _audioInputButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerMicIconNode alloc] init] matchingToolbar:self];
+        
+        
+        _rightButtonsNode = _audioInputButton;
         
         _finalInsets = UIEdgeInsetsMake(8, 0, 10, 0);
     }
@@ -99,6 +109,79 @@
     NSString* text = [_textInputNode.attributedText.string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     _textInputNode.attributedText = [[NSAttributedString alloc] initWithString:@"" attributes:_textInputNode.typingAttributes];
     return text;
+}
+
+-(void)audioRecorderGesture:(UILongPressGestureRecognizer *)gestureRecognizer {
+    switch (gestureRecognizer.state) {
+        case UIGestureRecognizerStateBegan: {
+            pointAudioStart = [gestureRecognizer locationInView:self.view];
+            [self audioRecorderInit];
+            [self audioRecorderStart];
+            break;
+        }
+        case UIGestureRecognizerStateChanged: {
+            break;
+        }
+        case UIGestureRecognizerStateEnded: {
+            CGPoint pointAudioStop = [gestureRecognizer locationInView:self.view];
+            CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
+            [self audioRecorderStop:(distanceAudio < 50)];
+            break;
+        }
+        case UIGestureRecognizerStatePossible:
+        case UIGestureRecognizerStateCancelled:
+        case UIGestureRecognizerStateFailed:
+            break;
+    }
+}
+
+-(void)audioRecorderInit {
+    NSString *dir = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
+    NSString *path = [dir stringByAppendingString:@"audioRecorder.mp3"];
+    NSError *error;
+    
+    NSDictionary *settings = @{
+                               AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+                               AVSampleRateKey : @(44100),
+                               AVNumberOfChannelsKey : @(2)
+                               };
+    
+    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:path] settings:settings error:&error];
+    audioRecorder.meteringEnabled = YES;
+    
+    [audioRecorder prepareToRecord];
+}
+
+-(void)audioRecorderStart {
+    [audioRecorder record];
+    
+    dateAudioStart = [NSDate date];
+    
+    timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
+    [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
+    
+    [self audioRecorderUpdate];
+}
+
+-(void)audioRecorderStop:(BOOL)sending {
+    [audioRecorder stop];
+    
+    [timerAudio invalidate];
+    timerAudio = nil;
+    
+    if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
+
+    } else {
+        [audioRecorder deleteRecording];
+    }
+}
+
+-(void)audioRecorderUpdate {
+    NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:dateAudioStart];
+    int millisec = (int) (interval * 100) % 100;
+    int seconds = (int) interval % 60;
+    int minutes = (int) interval / 60;
+//    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
 }
 
 @end
