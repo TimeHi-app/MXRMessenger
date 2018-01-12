@@ -20,13 +20,17 @@
 @property (nonatomic, strong, readonly) ASImageNode *backgroundImageNode;
 @property (nonatomic, strong, readonly) NSURL *audioURL;
 
+
 - (instancetype)initWithAudioURL:(NSURL *)audioURL configuration:(MXRMessageAudioConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornerHavingRadius NS_DESIGNATED_INITIALIZER;
 
 @end
 
 @interface MXRMessageAudioConfiguration : MXRMessageNodeConfiguration
 
--(instancetype)initWithBackgroundColor:(UIColor *)backgroundColor;
+-(instancetype)initWithBackgroundColor:(UIColor *)backgroundColor playButton:(ASButtonNode *)playButton pauseButton:(ASButtonNode *)pauseButton;
+
+@property (nonatomic, strong) ASButtonNode *playButtonNode;
+@property (nonatomic, strong) ASButtonNode *pauseButtonNode;
 
 @end
 
@@ -45,8 +49,6 @@
 @interface MXRMessengerButtonContainerNode : ASDisplayNode
 
 @property (nonatomic, assign) BOOL isPlaying;
-@property (nonatomic, strong) MXRMessengerPlayButtonNode *playButtonNode;
-@property (nonatomic, strong) MXRMessengerPauseButtonNode *pauseButtonNode;
 
 @end
 

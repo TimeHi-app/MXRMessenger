@@ -20,6 +20,8 @@
 @property (assign, nonatomic) CMTime duration;
 @property (assign, nonatomic) BOOL isSeeking;
 @property (assign, nonatomic) BOOL isPlaying;
+@property (strong, nonatomic, readonly) MXRMessengerPlayButtonNode *playButton;
+@property (strong, nonatomic, readonly) MXRMessengerPauseButtonNode *pauseButton;
 
 @end
 
@@ -35,12 +37,16 @@
         self.userInteractionEnabled = YES;
         
         _audioURL = audioURL;
+        _playButton = (MXRMessengerPlayButtonNode *)configuration.playButtonNode;
+        _pauseButton = (MXRMessengerPauseButtonNode *)configuration.pauseButtonNode;
+        
         
         self.item = [AVPlayerItem playerItemWithURL:self.audioURL];
         
-        
         [self createDurationTextField];
         [self createContainerNode];
+        [self createPlayButtonNode];
+        [self createPauseButtonNode];
         [self createScrubber];
         
         _backgroundImageNode = [[ASImageNode alloc] init];
@@ -75,7 +81,7 @@
         _durationTextNode.attributedText = attributedString;
         _durationTextNode.truncationMode = NSLineBreakByClipping;
     }
-    [self addSubnode:_durationTextNode];
+//    [self addSubnode:_durationTextNode];
 }
 
 -(void)createContainerNode {
@@ -83,7 +89,25 @@
         _containerNode = [[MXRMessengerButtonContainerNode alloc] init];
         _containerNode.style.preferredSize = CGSizeMake(39.0f, 39.0f);
     }
-    [self addSubnode:_containerNode];
+//    [self addSubnode:_containerNode];
+}
+
+-(void)createPlayButtonNode {
+    if (_playButton == nil) {
+        _playButton = [[MXRMessengerPlayButtonNode alloc] init];
+        _playButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
+    }
+    [_playButton addTarget:self action:@selector(didTapPlayButton) forControlEvents:ASControlNodeEventTouchUpInside];
+//    [self addSubnode:_playButton];
+}
+
+-(void)createPauseButtonNode {
+    if (_pauseButton == nil) {
+        _pauseButton = [[MXRMessengerPauseButtonNode alloc] init];
+        _pauseButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
+    }
+    [_pauseButton addTarget:self action:@selector(didTapPlayButton) forControlEvents:ASControlNodeEventTouchUpInside];
+//    [self addSubnode:_pauseButton];
 }
 
 -(void)didTapPlayButton {
@@ -212,9 +236,11 @@
     
     _backgroundImageNode.style.preferredSize = maxSize;
     
-    ASLayoutSpec *layoutSpec = [self defaultLayoutSpecThatFits:maxSize];
     
-    ASStackLayoutSpec *audioSpec = [ASStackLayoutSpec stackLayoutSpecWithDirection:ASStackLayoutDirectionHorizontal spacing:10.0f justifyContent:ASStackLayoutJustifyContentCenter alignItems:ASStackLayoutAlignItemsCenter children:@[_containerNode, layoutSpec]];
+    ASLayoutSpec *layoutSpec = [self defaultLayoutSpecThatFits:maxSize];
+    ASLayoutSpec *containerSpec = [self containerLayoutSpectThatFits:CGSizeMake(39.0f, 39.0f)];
+    
+    ASStackLayoutSpec *audioSpec = [ASStackLayoutSpec stackLayoutSpecWithDirection:ASStackLayoutDirectionHorizontal spacing:10.0f justifyContent:ASStackLayoutJustifyContentCenter alignItems:ASStackLayoutAlignItemsCenter children:@[containerSpec, layoutSpec]];
     audioSpec.style.preferredSize = maxSize;
     
     ASInsetLayoutSpec *insetLayout = [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(10, 10, 10, 10) child:audioSpec];
@@ -234,6 +260,12 @@
     progressSpec.style.alignSelf = ASStackLayoutAlignSelfStretch;
     
     return progressSpec;
+}
+
+-(ASLayoutSpec *)containerLayoutSpectThatFits:(CGSize)buttonSize {
+    MXRMessengerAudioIconNode *node = self.isPlaying ? (MXRMessengerPauseButtonNode *)_configuration.pauseButtonNode : (MXRMessengerPlayButtonNode *)_configuration.playButtonNode;
+    
+    return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(0, 0, 0, 0 ) child:node];
 }
 
 - (void)redrawBubble {
@@ -274,12 +306,15 @@
 @implementation MXRMessageAudioConfiguration
 
 -(instancetype)init {
-    return [self initWithBackgroundColor:[UIColor mxr_bubbleBlueGrey]];
+    
+    return [self initWithBackgroundColor:[UIColor mxr_bubbleBlueGrey] playButton:[[MXRMessengerPlayButtonNode alloc] init] pauseButton:[[MXRMessengerPauseButtonNode alloc] init]];
 }
 
--(instancetype)initWithBackgroundColor:(UIColor *)backgroundColor {
+-(instancetype)initWithBackgroundColor:(UIColor *)backgroundColor playButton:(UIImage *)playButton pauseButton:(UIImage *)pauseButton {
     if (self = [super init]) {
         self.backgroundColor = backgroundColor;
+        self.playButtonNode = playButton;
+        self.pauseButtonNode = pauseButton;
     }
     return self;
 }
@@ -448,34 +483,18 @@
     return self;
 }
 
--(MXRMessengerPlayButtonNode *)playButtonNode {
-    if (!_playButtonNode) {
-        _playButtonNode = [[MXRMessengerPlayButtonNode alloc] init];
-        _playButtonNode.style.preferredSize = CGSizeMake(39.0f, 39.0f);
-    }
-    [_playButtonNode addTarget:self action:@selector(didTapPlayButton) forControlEvents:ASControlNodeEventTouchUpInside];
-    return _playButtonNode;
-}
-
--(MXRMessengerPauseButtonNode *)pauseButtonNode {
-    if (!_pauseButtonNode) {
-        _pauseButtonNode = [[MXRMessengerPauseButtonNode alloc] init];
-        _pauseButtonNode.style.preferredSize = CGSizeMake(39.0f, 39.0f);
-    }
-    [_pauseButtonNode addTarget:self action:@selector(didTapPlayButton) forControlEvents:ASControlNodeEventTouchUpInside];
-    return _pauseButtonNode;
-}
-
--(void)didTapPlayButton {
-    self.isPlaying = !self.isPlaying;
-    [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
-}
-
--(ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
-    MXRMessengerAudioIconNode *node = self.isPlaying ? self.pauseButtonNode : self.playButtonNode;
-    
-    return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(0, 0, 0, 0 ) child:node];
-}
+//
+//
+//-(void)didTapPlayButton {
+//    self.isPlaying = !self.isPlaying;
+//    [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+//}
+//
+//-(ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
+//    MXRMessengerAudioIconNode *node = self.isPlaying ? self.pauseButtonNode : self.playButtonNode;
+//
+//    return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(0, 0, 0, 0 ) child:node];
+//}
 
 @end
 

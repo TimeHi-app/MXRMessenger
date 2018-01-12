@@ -69,12 +69,13 @@
 }
 
 -(void)audioRecorderInit {
+    NSLog(@"RECORDING");
     NSString *dir = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
     NSString *path = [dir stringByAppendingString:@"audioRecorder.mp3"];
     NSError *error;
     
     NSDictionary *settings = @{
-                               AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+                               AVFormatIDKey : @(kAudioFormatMPEGLayer3),
                                AVSampleRateKey : @(44100),
                                AVNumberOfChannelsKey : @(2)
                                };
@@ -130,6 +131,9 @@
     gesture.cancelsTouchesInView = NO;
     [self.toolbar.rightButtonsNode.view addGestureRecognizer:gesture];
     
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAddPhotos:)];
+    tap.cancelsTouchesInView = NO;
+    [self.toolbar.leftButtonsNode.view addGestureRecognizer:tap];
     
     [self customizeCellFactory];
     [self fetchMessages];
@@ -152,8 +156,15 @@
     imageConfig.maxCornerRadius = maxCornerRadius;
     MXRMessageMediaCollectionConfiguration* mediaCollectionConfig = [[MXRMessageMediaCollectionConfiguration alloc] init];
     mediaCollectionConfig.maxCornerRadius = maxCornerRadius;
+
+    ASButtonNode *playButton = [[ASButtonNode alloc] init];
+    ASButtonNode *pauseButton = [[ASButtonNode alloc] init];
+    playButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
+    [playButton setImage:[UIImage imageNamed:@"group5"] forState:UIControlStateNormal];
+    pauseButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
+    [pauseButton setImage:[UIImage imageNamed:@"group6"] forState:UIControlStateNormal];
     
-    MXRMessageAudioConfiguration *audioConfig = [[MXRMessageAudioConfiguration alloc] initWithBackgroundColor:[UIColor mxr_bubbleBlueGrey]];
+    MXRMessageAudioConfiguration *audioConfig = [[MXRMessageAudioConfiguration alloc] initWithBackgroundColor:[UIColor mxr_bubbleBlueGrey] playButton:playButton pauseButton:pauseButton];
     audioConfig.maxCornerRadius = maxCornerRadius;
     
     MXRMessageSystemConfiguration *systemConfig = [[MXRMessageSystemConfiguration alloc] initWithFont:nil textColor:[UIColor blueColor] backgroundColor:[UIColor mxr_bubbleBlueGrey]];
