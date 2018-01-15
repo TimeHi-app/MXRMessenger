@@ -164,7 +164,7 @@
     pauseButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
     [pauseButton setImage:[UIImage imageNamed:@"group6"] forState:UIControlStateNormal];
     
-    MXRMessageAudioConfiguration *audioConfig = [[MXRMessageAudioConfiguration alloc] initWithBackgroundColor:[UIColor mxr_bubbleBlueGrey] playButton:playButton pauseButton:pauseButton];
+    MXRMessageAudioConfiguration *audioConfig = [[MXRMessageAudioConfiguration alloc] initWithBackgroundColor:[UIColor mxr_bubbleBlueGrey] playButton:[UIImage imageNamed:@"group5"] pauseButton:[UIImage imageNamed:@"group6"]];
     audioConfig.maxCornerRadius = maxCornerRadius;
     
     MXRMessageSystemConfiguration *systemConfig = [[MXRMessageSystemConfiguration alloc] initWithFont:nil textColor:[UIColor blueColor] backgroundColor:[UIColor mxr_bubbleBlueGrey]];

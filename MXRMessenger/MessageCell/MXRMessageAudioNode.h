@@ -15,7 +15,6 @@
 @interface MXRMessageAudioNode : MXRMessageContentNode
 
 @property (nonatomic, strong, readonly) ASDisplayNode *scrubberNode;
-@property (nonatomic, strong, readonly) MXRMessengerButtonContainerNode *containerNode;
 @property (nonatomic, strong, readonly) ASTextNode *durationTextNode;
 @property (nonatomic, strong, readonly) ASImageNode *backgroundImageNode;
 @property (nonatomic, strong, readonly) NSURL *audioURL;
@@ -27,10 +26,10 @@
 
 @interface MXRMessageAudioConfiguration : MXRMessageNodeConfiguration
 
--(instancetype)initWithBackgroundColor:(UIColor *)backgroundColor playButton:(ASButtonNode *)playButton pauseButton:(ASButtonNode *)pauseButton;
+-(instancetype)initWithBackgroundColor:(UIColor *)backgroundColor playButton:(UIImage *)playButton pauseButton:(UIImage *)pauseButton;
 
-@property (nonatomic, strong) ASButtonNode *playButtonNode;
-@property (nonatomic, strong) ASButtonNode *pauseButtonNode;
+@property (nonatomic, strong) UIImage *playButtonNode;
+@property (nonatomic, strong) UIImage *pauseButtonNode;
 
 @end
 
@@ -44,12 +43,6 @@
 @end
 
 @interface MXRMessengerPauseButtonNode : MXRMessengerAudioIconNode
-@end
-
-@interface MXRMessengerButtonContainerNode : ASDisplayNode
-
-@property (nonatomic, assign) BOOL isPlaying;
-
 @end
 
 @interface MXRMessengerAudioIconButtonNode : ASControlNode
