@@ -139,6 +139,10 @@
     [self fetchMessages];
 }
 
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    
+}
+
 - (void)customizeCellFactory {
     MXRMessageCellLayoutConfiguration* layoutConfigForMe = [MXRMessageCellLayoutConfiguration rightToLeft];
     MXRMessageCellLayoutConfiguration* layoutConfigForOthers = [MXRMessageCellLayoutConfiguration leftToRight];

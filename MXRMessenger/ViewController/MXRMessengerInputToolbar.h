@@ -18,7 +18,7 @@
 @property (nonatomic, strong) ASDisplayNode* leftButtonsNode;
 @property (nonatomic, strong) ASDisplayNode* rightButtonsNode;
 @property (nonatomic, strong, readonly) MXRMessengerIconButtonNode* defaultSendButton; // setting rightButtonsNode hides this
-@property (nonatomic, strong, readonly) ASDisplayNode* audioInputButton;
+@property (nonatomic, strong, readonly) MXRMessengerIconButtonNode* audioInputButton;
 
 @property (nonatomic, assign, readonly) CGFloat heightOfTextNodeWithOneLineOfText;
 @property (nonatomic, strong, readonly) UIFont* font;
@@ -49,7 +49,7 @@
 @interface MXRMessengerEmojiIconNode : MXRMessengerIconNode
 @end
 
-@interface MXRMessengerIconButtonNode : ASDisplayNode
+@interface MXRMessengerIconButtonNode : ASControlNode
 
 @property (nonatomic, strong) MXRMessengerIconNode* icon;
 

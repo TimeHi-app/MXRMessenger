@@ -19,6 +19,9 @@
     AVAudioRecorder *audioRecorder;
     NSTimer *timerAudio;
     NSDate *dateAudioStart;
+    
+    BOOL isTyping;
+    UIView *buttonView;
 }
 
 - (instancetype)init {
@@ -30,6 +33,7 @@
     if (self) {
         NSAssert(font, @"You forgot to provide a font to init %@", NSStringFromClass(self.class));
         self.automaticallyManagesSubnodes = YES;
+        self.defaultLayoutTransitionDuration = 0.05;
         self.backgroundColor = [UIColor whiteColor];
         _font = font;
         _tintColor = tintColor;
@@ -51,6 +55,7 @@
         _textInputBackgroundNode.displaysAsynchronously = NO; // otherwise it doesnt appear until viewDidAppear
         
         _textInputNode = [[MXRGrowingEditableTextNode alloc] init];
+        _textInputNode.delegate = self;
         
         _textInputNode.tintColor = tintColor;
         _textInputNode.maximumLinesToDisplay = 6;
@@ -63,11 +68,13 @@
         
         _defaultSendButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerSendIconNode alloc] init] matchingToolbar:self];
 //        _rightButtonsNode = _defaultSendButton;
+        _defaultSendButton.view.tag = 99;
         
         _audioInputButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerMicIconNode alloc] init] matchingToolbar:self];
-        
+        _audioInputButton.view.tag = 90;
         
         _rightButtonsNode = _audioInputButton;
+        _rightButtonsNode.view.tag = 95;
         
         _finalInsets = UIEdgeInsetsMake(8, 0, 10, 0);
     }
@@ -90,6 +97,9 @@
     NSMutableArray* inputBarChildren = [[NSMutableArray alloc] init];
     if (_leftButtonsNode) [inputBarChildren addObject:_leftButtonsNode];
     
+    _rightButtonsNode = isTyping ? _defaultSendButton : _audioInputButton;
+    buttonView = _rightButtonsNode.view;
+    
     ASInsetLayoutSpec* textInputInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:_textInputInsets child:_textInputNode];
     ASBackgroundLayoutSpec* textInputWithBackground = [ASBackgroundLayoutSpec backgroundLayoutSpecWithChild:textInputInset background:_textInputBackgroundNode];
     textInputWithBackground.style.flexGrow = 1.0f;
@@ -103,6 +113,16 @@
     
     ASInsetLayoutSpec* inputBarInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:_finalInsets child:inputBar];
     return inputBarInset;
+}
+
+-(void)editableTextNodeDidUpdateText:(ASEditableTextNode *)editableTextNode {
+    if (_textInputNode.textView.text.length == 1) {
+        isTyping = YES;
+        [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+    } else if (_textInputNode.textView.text.length == 0) {
+        isTyping = NO;
+        [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+    }
 }
 
 - (NSString*)clearText {
@@ -527,6 +547,7 @@
     self = [super init];
     if (self) {
         self.automaticallyManagesSubnodes = YES;
+        self.userInteractionEnabled = YES;
     }
     return self;
 }
@@ -548,5 +569,38 @@
     button.hitTestSlop = UIEdgeInsetsMake(-4.0f, 0, -10.0f, 0.0f);
     return button;
 }
+
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [super touchesBegan:touches withEvent:event];
+    
+    UITouch *touch = [[UITouch alloc] init];
+    touch = touches.allObjects[0];
+    
+    for (UIView *view in [self.view subviews]) {
+        if (CGRectContainsPoint([view frame], [touch locationInView:self.view])) {
+            NSLog(@"");
+        }
+    }
+    
+    if ([touch.view isKindOfClass:[MXRMessengerIconNode class]]) {
+        NSLog(@"");
+    }
+    
+    NSLog(@"");
+}
+
+-(void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [super touchesMoved:touches withEvent:event];
+}
+
+-(void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [super touchesEnded:touches withEvent:event];
+}
+
+-(void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [super touchesCancelled:touches withEvent:event];
+}
+
+
 
 @end
