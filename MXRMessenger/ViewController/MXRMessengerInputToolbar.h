@@ -49,10 +49,21 @@
 @interface MXRMessengerEmojiIconNode : MXRMessengerIconNode
 @end
 
+@protocol MXRMessengerIconButtonDelegate <NSObject>
+
+-(void)touchDidBegin:(UITouch *)touch;
+-(void)touchDidMove:(UITouch *)touch;
+-(void)touchDidEnd:(UITouch *)touch;
+-(void)touchDidCancel:(UITouch *)touch;
+
+@end
+
 @interface MXRMessengerIconButtonNode : ASControlNode
 
 @property (nonatomic, strong) MXRMessengerIconNode* icon;
 
 + (instancetype)buttonWithIcon:(MXRMessengerIconNode*)icon matchingToolbar:(MXRMessengerInputToolbar*)toolbar;
+
+@property (assign, nonatomic) id<MXRMessengerIconButtonDelegate>delegate;
 
 @end

@@ -10,6 +10,10 @@
 
 #import <MXRMessenger/UIColor+MXRMessenger.h>
 
+@interface MXRMessengerInputToolbar () <MXRMessengerIconButtonDelegate, AVAudioPlayerDelegate>
+
+@end
+
 @implementation MXRMessengerInputToolbar {
     ASImageNode* _textInputBackgroundNode;
     UIEdgeInsets _textInputInsets;
@@ -68,18 +72,47 @@
         
         _defaultSendButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerSendIconNode alloc] init] matchingToolbar:self];
 //        _rightButtonsNode = _defaultSendButton;
-        _defaultSendButton.view.tag = 99;
+        _defaultSendButton.delegate = self;
         
         _audioInputButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerMicIconNode alloc] init] matchingToolbar:self];
-        _audioInputButton.view.tag = 90;
+        _audioInputButton.delegate = self;
         
         _rightButtonsNode = _audioInputButton;
-        _rightButtonsNode.view.tag = 95;
         
         _finalInsets = UIEdgeInsetsMake(8, 0, 10, 0);
     }
     return self;
 }
+
+-(void)touchDidBegin:(UITouch *)touch {
+    if (isTyping) {
+        //send text
+    } else {
+        pointAudioStart = [touch locationInView:self.view];
+        [self audioRecorderInit];
+        [self audioRecorderStart];
+    }
+}
+
+-(void)touchDidMove:(UITouch *)touch {
+    if (!isTyping) {
+        
+    }
+}
+
+-(void)touchDidEnd:(UITouch *)touch {
+    if (!isTyping) {
+        CGPoint pointAudioStop = [touch locationInView:self.view];
+        CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
+        [self audioRecorderStop:(distanceAudio < 50)];
+    }
+}
+
+-(void)touchDidCancel:(UITouch *)touch {
+    //send message
+}
+
+
 
 -(void)setDelegate:(id<ASEditableTextNodeDelegate>)delegate {
     _textInputNode.delegate = delegate;
@@ -155,10 +188,17 @@
     }
 }
 
+
+-(NSString *)pathForAudio{
+    return [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"audioRecorder.m4a"];
+}
+
+
+
 -(void)audioRecorderInit {
-    NSString *dir = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
-    NSString *path = [dir stringByAppendingString:@"audioRecorder.mp3"];
+    NSString *path = [self pathForAudio];
     NSError *error;
+    NSLog(@"SAVE: %@", path);
     
     NSDictionary *settings = @{
                                AVFormatIDKey : @(kAudioFormatMPEG4AAC),
@@ -167,6 +207,7 @@
                                };
     
     audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:path] settings:settings error:&error];
+    NSLog(@"ERROR: %@", [error description]);
     audioRecorder.meteringEnabled = YES;
     
     [audioRecorder prepareToRecord];
@@ -184,7 +225,13 @@
 }
 
 -(void)audioRecorderStop:(BOOL)sending {
+    NSLog(@"END RECORDING");
     [audioRecorder stop];
+    
+    NSString *path = [self pathForAudio];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ([fileManager fileExistsAtPath:path])
+        NSLog(@"RETRIVE: %@", path);
     
     [timerAudio invalidate];
     timerAudio = nil;
@@ -573,34 +620,29 @@
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     [super touchesBegan:touches withEvent:event];
     
-    UITouch *touch = [[UITouch alloc] init];
-    touch = touches.allObjects[0];
-    
-    for (UIView *view in [self.view subviews]) {
-        if (CGRectContainsPoint([view frame], [touch locationInView:self.view])) {
-            NSLog(@"");
-        }
-    }
-    
-    if ([touch.view isKindOfClass:[MXRMessengerIconNode class]]) {
-        NSLog(@"");
-    }
-    
-    NSLog(@"");
+    if ([self.delegate respondsToSelector:@selector(touchDidBegin:)])
+        [self.delegate touchDidBegin:event.allTouches.allObjects[0]];
 }
 
 -(void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     [super touchesMoved:touches withEvent:event];
+    
+    if ([self.delegate respondsToSelector:@selector(touchDidMove:)])
+        [self.delegate touchDidMove:event.allTouches.allObjects[0]];
 }
 
 -(void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     [super touchesEnded:touches withEvent:event];
+    
+    if ([self.delegate respondsToSelector:@selector(touchDidEnd:)])
+        [self.delegate touchDidEnd:event.allTouches.allObjects[0]];
 }
 
 -(void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     [super touchesCancelled:touches withEvent:event];
+    
+    if ([self.delegate respondsToSelector:@selector(touchDidCancel:)])
+        [self.delegate touchDidCancel:event.allTouches.allObjects[0]];
 }
-
-
 
 @end
