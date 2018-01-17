@@ -191,7 +191,8 @@
 
 
 -(NSString *)pathForAudio:(NSString *)extension{
-    NSString *fileName = [NSString stringWithFormat:@"audioRecorder.%@", extension];
+    int r = arc4random_uniform(5000);
+    NSString *fileName = [NSString stringWithFormat:@"audioRecorder%d.%@", r, extension];
     
     return [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:fileName];
 }
@@ -209,6 +210,7 @@
     if ([fileManager fileExistsAtPath:outputPath])
         [fileManager removeItemAtPath:outputPath error:&error];
     
+    NSLog(@"ERROR: %@", [error description]);
     NSLog(@"SAVE: %@", inputPath);
     
     NSDictionary *settings = @{
