@@ -73,7 +73,7 @@
         self.toolBarDelegate = self;
         
         _defaultSendButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerSendIconNode alloc] init] matchingToolbar:self];
-//        _rightButtonsNode = _defaultSendButton;
+        //        _rightButtonsNode = _defaultSendButton;
         _defaultSendButton.delegate = self;
         
         _audioInputButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerMicIconNode alloc] init] matchingToolbar:self];
@@ -88,11 +88,12 @@
 
 -(void)touchDidBegin:(UITouch *)touch {
     if (isTyping) {
-        //send text
+        if ([self.toolBarDelegate respondsToSelector:@selector(didTapSendButton)])
+            [self.toolBarDelegate didTapSendButton];
     } else {
         pointAudioStart = [touch locationInView:self.view];
         [self audioRecorderInit];
-//        [self audioRecorderStart];
+        //        [self audioRecorderStart];
     }
 }
 
@@ -198,9 +199,17 @@
 
 
 -(void)audioRecorderInit {
-    NSString *path = [self pathForAudio:@"m4a"];
     NSError *error;
-    NSLog(@"SAVE: %@", path);
+    
+    NSString *inputPath = [self pathForAudio:@"m4a"];
+    NSString *outputPath = [self pathForAudio:@"mp3"];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ([fileManager fileExistsAtPath:inputPath])
+        [fileManager removeItemAtPath:inputPath error:&error];
+    if ([fileManager fileExistsAtPath:outputPath])
+        [fileManager removeItemAtPath:outputPath error:&error];
+    
+    NSLog(@"SAVE: %@", inputPath);
     
     NSDictionary *settings = @{
                                AVFormatIDKey : @(kAudioFormatMPEG4AAC),
@@ -208,7 +217,7 @@
                                AVNumberOfChannelsKey : @(2)
                                };
     
-    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:path] settings:settings error:&error];
+    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:inputPath] settings:settings error:&error];
     NSLog(@"ERROR: %@", [error description]);
     audioRecorder.meteringEnabled = YES;
     
@@ -240,7 +249,7 @@
     ExtAudioConverter* converter = [[ExtAudioConverter alloc] init];
     converter.inputFile = inputPath;
     converter.outputFile = outputPath;
-
+    
     converter.outputSampleRate = 44100;
     converter.outputNumberChannels = 2;
     converter.outputBitDepth = BitDepth_32;
@@ -257,12 +266,12 @@
     } else {
         NSLog(@"Converted fail");
     }
-
+    
     [timerAudio invalidate];
     timerAudio = nil;
     
     if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
-
+        
     } else {
         [audioRecorder deleteRecording];
     }
@@ -273,7 +282,7 @@
     int millisec = (int) (interval * 100) % 100;
     int seconds = (int) interval % 60;
     int minutes = (int) interval / 60;
-//    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
+    //    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
 }
 
 @end
@@ -360,7 +369,7 @@
             
             [color2 setFill];
             [pathPath fill];
-
+            
             UIBezierPath* path2Path = UIBezierPath.bezierPath;
             [path2Path moveToPoint: CGPointMake(23.74, 19.88)];
             [path2Path addLineToPoint: CGPointMake(9.42, 19.88)];
@@ -376,7 +385,7 @@
             
             [color2 setFill];
             [path2Path fill];
-
+            
             UIBezierPath* path4Path = UIBezierPath.bezierPath;
             [path4Path moveToPoint: CGPointMake(4, 9.38)];
             [path4Path addCurveToPoint: CGPointMake(3.17, 10.21) controlPoint1: CGPointMake(3.54, 9.38) controlPoint2: CGPointMake(3.17, 9.75)];
@@ -396,7 +405,7 @@
             
             [color2 setFill];
             [path4Path fill];
-
+            
             UIBezierPath* path6Path = UIBezierPath.bezierPath;
             [path6Path moveToPoint: CGPointMake(23.74, 11.38)];
             [path6Path addLineToPoint: CGPointMake(9.42, 11.38)];
@@ -412,7 +421,7 @@
             
             [color2 setFill];
             [path6Path fill];
-
+            
             UIBezierPath* path8Path = UIBezierPath.bezierPath;
             [path8Path moveToPoint: CGPointMake(4, 0.88)];
             [path8Path addCurveToPoint: CGPointMake(7.19, 4.07) controlPoint1: CGPointMake(5.76, 0.88) controlPoint2: CGPointMake(7.19, 2.31)];
@@ -432,7 +441,7 @@
             
             [color2 setFill];
             [path8Path fill];
-
+            
             UIBezierPath* path10Path = UIBezierPath.bezierPath;
             [path10Path moveToPoint: CGPointMake(23.74, 2.88)];
             [path10Path addLineToPoint: CGPointMake(9.42, 2.88)];
@@ -489,7 +498,7 @@
             
             [color2 setFill];
             [pathPath fill];
-
+            
             UIBezierPath* path2Path = UIBezierPath.bezierPath;
             [path2Path moveToPoint: CGPointMake(13.72, 13.51)];
             [path2Path addCurveToPoint: CGPointMake(13.04, 14.2) controlPoint1: CGPointMake(13.35, 13.51) controlPoint2: CGPointMake(13.04, 13.82)];
@@ -509,7 +518,7 @@
             
             [color2 setFill];
             [path2Path fill];
-
+            
             UIBezierPath* path4Path = UIBezierPath.bezierPath;
             [path4Path moveToPoint: CGPointMake(6.37, 23.27)];
             [path4Path addLineToPoint: CGPointMake(6.37, 25.83)];
@@ -553,7 +562,7 @@
             [color0 setStroke];
             stroke1Path.lineWidth = 1.5;
             [stroke1Path stroke];
-
+            
             UIBezierPath* pathPath = UIBezierPath.bezierPath;
             [pathPath moveToPoint: CGPointMake(6.31, 8.2)];
             [pathPath addCurveToPoint: CGPointMake(7.86, 6.66) controlPoint1: CGPointMake(6.31, 7.35) controlPoint2: CGPointMake(7.01, 6.66)];
@@ -571,7 +580,7 @@
             
             [color0 setFill];
             [pathPath fill];
-
+            
             UIBezierPath* path2Path = UIBezierPath.bezierPath;
             [path2Path moveToPoint: CGPointMake(7.12, 12.17)];
             [path2Path addCurveToPoint: CGPointMake(7.4, 11.47) controlPoint1: CGPointMake(7, 11.9) controlPoint2: CGPointMake(7.13, 11.59)];
@@ -590,7 +599,7 @@
             
             [color2 setFill];
             [path2Path fill];
-
+            
             UIBezierPath* path4Path = UIBezierPath.bezierPath;
             [path4Path moveToPoint: CGPointMake(11.24, 8.21)];
             [path4Path addCurveToPoint: CGPointMake(12.78, 6.66) controlPoint1: CGPointMake(11.24, 7.35) controlPoint2: CGPointMake(11.93, 6.66)];
