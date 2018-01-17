@@ -45,7 +45,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
         _cellConfigForMe = cellConfigForMe ? : [[MXRMessageCellConfiguration alloc] init];
         _cellConfigForOthers = cellConfigForOthers ? : [[MXRMessageCellConfiguration alloc] init];
         _spacingBetweenMessagesFromMeAndMessagesFromOthers = 8.0f;
-        
+
         _isAutomaticallyManagingWhichCornersAreRounded = YES;
         _isAutomaticallyManagingDateHeaders = YES;
 
@@ -89,18 +89,18 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
 
 - (ASCellNodeBlock)cellNodeBlockWithType:(MXRMessageContentType)type text:(NSString *)text imageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton media:(NSArray<id<MXRMessengerMedium>> *)media audioURL:(NSURL *)audioURL tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
     // we query the datasource before entering block, all other computations can go in the async block
-    
+
     __block MXRMessageContext context; __block MXRMessageContext previousContext; __block MXRMessageContext nextContext;
     NSURL* avatarURL = nil;
     [self setContext:&context previous:&previousContext next:&nextContext avatarURL:&avatarURL tableNode:tableNode row:row];
-    
+
     __weak MXRMessageCellFactory* weakSelf = self;
     return ^MXRMessageCellNode*{
         __strong MXRMessageCellFactory* self = weakSelf;
         // we reset pointers to prevent pointing to a garbage stack address
         if (context.previous != NULL) context.previous = &previousContext;
         if (context.next != NULL) context.next = &nextContext;
-        
+
         MXRMessageCellConfiguration* config = context.isFromMe ? self.cellConfigForMe : self.cellConfigForOthers;
         MXRMessageCellLayoutConfiguration* layoutConfig = config.layoutConfig;
         MXRMessageAvatarConfiguration* avatarConfig = config.avatarConfig;
@@ -120,11 +120,13 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             if (avatarConfig.cornerRadius > 0) {
                 avatarNode.imageModificationBlock = [UIImage mxr_imageModificationBlockToScaleToSize:avatarConfig.size cornerRadius:avatarConfig.cornerRadius];
             }
+            avatarNode.URL = avatarURL;
+            avatarNode.hidden = MXRMessageContextNextHasSameSender(context);
             avatarNode.defaultImage = self.avatarPlaceholder;
-            avatarNode.URL = MXRMessageContextNextHasSameSender(context) ? nil : avatarURL;
+
             cell.avatarNode = avatarNode;
         }
-        
+
         UIRectCorner cornersHavingRadius = context.cornersHavingRadius;
         if (type == MXRMessageContentTypeTextOnly) {
             MXRMessageTextNode* textNode = [[MXRMessageTextNode alloc] initWithText:text configuration:config.textConfig cornersToApplyMaxRadius:cornersHavingRadius];
@@ -145,11 +147,11 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             MXRMessageAudioNode *audioNode = [[MXRMessageAudioNode alloc] initWithAudioURL:audioURL configuration:config.audioConfig cornersToApplyMaxRadius:cornersHavingRadius];
             cell.messageContentNode = audioNode;
         }
-        
+
         if (context.isShowingDate) {
             cell.headerNode = [self headerNodeFromDate:[NSDate dateWithTimeIntervalSince1970:context.timestamp]];
         }
-        
+
         return cell;
     };
 }
@@ -167,18 +169,18 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
     // This method initializes the values of context and its pointers, but does not attempt to construct
     // a proper linked list by initializing the pointers in previousContext and nextContext.
     // Only the non-pointer properties in previous and next should be accessed.
-    
+
     NSAssert(context, @"internal expectations failed: no context");
     NSAssert(previousContext, @"internal expectations failed: no previousContext");
     NSAssert(nextContext, @"internal expectations failed: no nextContext");
-    
+
     // bc of ASTableNode.inverted=YES the most recent message is at 0,0
     BOOL hasPreviousMessage = row < [self.dataSource tableNode:tableNode numberOfRowsInSection:0] - 1;
     BOOL hasNextMessage = row > 0;
 
     context->previous = hasPreviousMessage ? previousContext : NULL;
     context->next = hasNextMessage ? nextContext : NULL;
-    
+
     if (self.isAutomaticallyManagingWhichCornersAreRounded) {
         previousContext->isFromMe = hasPreviousMessage ? [self.dataSource cellFactory:self isMessageFromMeAtRow:(row + 1)] : NO;
         context->isFromMe = [self.dataSource cellFactory:self isMessageFromMeAtRow:row];
@@ -186,12 +188,12 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
     } else {
         previousContext->isFromMe = context->isFromMe = nextContext->isFromMe = NO;
     }
-    
+
     if (self.isAutomaticallyManagingDateHeaders) {
         previousContext->timestamp = hasPreviousMessage ? [self.dataSource cellFactory:self timeIntervalSince1970AtRow:(row + 1)] : 0;
         context->timestamp = [self.dataSource cellFactory:self timeIntervalSince1970AtRow:row];
         nextContext->timestamp = hasNextMessage ? [self.dataSource cellFactory:self timeIntervalSince1970AtRow:(row - 1)] : 0;
-        
+
         // we dont need to calculate if previous is showing date since we only show
         // dates in headers to determine corner rounding
         previousContext->isShowingDate = NO;
@@ -201,7 +203,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
         previousContext->isShowingDate = context->isShowingDate = nextContext->isShowingDate = NO;
         previousContext->timestamp = context->timestamp = nextContext->timestamp = 0;
     }
-    
+
     if ((avatarURLHandle != NULL) && _dataSourceFlags.avatarURLAtRow) {
             *avatarURLHandle = [self.dataSource cellFactory:self avatarURLAtRow:row];
     }
@@ -245,7 +247,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
 }
 
 - (void)updateTableNode:(ASTableNode *)tableNode animated:(BOOL)animated withInsertions:(NSArray<NSIndexPath *> *)insertions deletions:(NSArray<NSIndexPath *> *)deletions reloads:(NSArray<NSIndexPath *> *)reloads completion:(void (^)(BOOL finished))completion {
-    
+
     NSInteger oldNumberOfRows = [tableNode numberOfRowsInSection:0];
     MXRMessageCellNode* oldMostRecentNode = nil;
     MXRMessageCellNode* oldOldestNode = nil;
@@ -265,11 +267,11 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             if (completion) completion(finished);
             return;
         }
-        
+
         if (weakSelf.isAutomaticallyManagingWhichCornersAreRounded) {
             [weakSelf updateRoundedCornersOfCellNode:oldMostRecentNode];
         }
-        
+
         NSIndexPath* oldOldestIndexPath = [oldOldestNode indexPath];
         BOOL oldOldestNeedsReload = weakSelf.isAutomaticallyManagingDateHeaders && oldOldestIndexPath && oldOldestIndexPath.row != ([tableNode numberOfRowsInSection:0] - 1);
         if (oldOldestNeedsReload) {
@@ -288,10 +290,13 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
     NSIndexPath* indexPath = cellNode.indexPath;
     ASTableNode* tableNode = (ASTableNode*)cellNode.owningNode;
     if (!tableNode || !indexPath || !self.isAutomaticallyManagingWhichCornersAreRounded) return;
-    
+
     __block MXRMessageContext context; __block MXRMessageContext previousContext; __block MXRMessageContext nextContext;
     [self setContext:&context previous:&previousContext next:&nextContext avatarURL:NULL tableNode:tableNode row:indexPath.row];
     [cellNode.messageContentNode redrawBubbleWithCorners:context.cornersHavingRadius];
+    if (MXRMessageContextNextHasSameSender(context)) {
+        cellNode.avatarNode.hidden = YES;
+    }
 }
 
 @end
