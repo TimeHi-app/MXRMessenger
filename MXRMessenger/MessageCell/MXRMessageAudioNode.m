@@ -42,8 +42,6 @@
         _playImage = configuration.playButtonNode;
         _pauseImage = configuration.pauseButtonNode;
         
-//        self.item = [AVPlayerItem playerItemWithURL:self.audioURL];
-        
         [self createDurationTextField];
         [self createPlayButtonNode];
         [self createPauseButtonNode];
@@ -74,8 +72,6 @@
 
 -(void)createDurationTextField {
     if (_durationTextNode == nil) {
-        _durationTextNode = [[ASTextNode alloc] init];
-        self.duration = self.item.asset.duration;
         
         NSDictionary *options = @{
                                   NSFontAttributeName : [UIFont systemFontOfSize:12.0],
