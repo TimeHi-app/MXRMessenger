@@ -9,10 +9,13 @@
 #import <AsyncDisplayKit/AsyncDisplayKit.h>
 
 #import <MXRMessenger/MXRGrowingEditableTextNode.h>
+#import <MXRMessenger/MXRMessengerInputToolBarDelegate.h>
 
 @class MXRMessengerIconButtonNode;
 
 @interface MXRMessengerInputToolbar : ASDisplayNode <ASEditableTextNodeDelegate>
+
+@property (assign, nonatomic) id<MXRMessengerInputToolBarDelegate>toolBarDelegate;
 
 @property (nonatomic, strong, readonly) MXRGrowingEditableTextNode* textInputNode;
 @property (nonatomic, strong) ASDisplayNode* leftButtonsNode;

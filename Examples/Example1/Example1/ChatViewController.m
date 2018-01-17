@@ -14,7 +14,7 @@
 #import "Message.h"
 #import "Person.h"
 
-@interface ChatViewController () <MXRMessageCellFactoryDataSource, MXRMessageContentNodeDelegate, MXRMessageMediaCollectionNodeDelegate, ASTableDelegate, ASTableDataSource>
+@interface ChatViewController () <MXRMessageCellFactoryDataSource, MXRMessageContentNodeDelegate, MXRMessageMediaCollectionNodeDelegate, ASTableDelegate, ASTableDataSource, MXRMessengerInputToolBarDelegate>
 
 @property (nonatomic, strong) MXRMessageCellFactory* cellFactory;
 @property (nonatomic, strong) NSMutableArray <Message*>* messages;
@@ -38,84 +38,11 @@
 //        [addPhotosBarButtonButtonNode addTarget:self action:@selector(tapAddPhotos:) forControlEvents:ASControlNodeEventTouchUpInside];
         self.toolbar.leftButtonsNode = addPhotosBarButtonButtonNode;
 //        [self.toolbar.defaultSendButton addTarget:self action:@selector(tapSend:) forControlEvents:ASControlNodeEventTouchUpInside];
+        self.toolbar.toolBarDelegate = self;
         
         _otherPersonsAvatar = person.avatarURL;
     }
     return self;
-}
-
--(void)audioRecorderGesture:(UILongPressGestureRecognizer *)gestureRecognizer {
-    switch (gestureRecognizer.state) {
-        case UIGestureRecognizerStateBegan: {
-            pointAudioStart = [gestureRecognizer locationInView:self.view];
-            [self audioRecorderInit];
-            [self audioRecorderStart];
-            break;
-        }
-        case UIGestureRecognizerStateChanged: {
-            break;
-        }
-        case UIGestureRecognizerStateEnded: {
-            CGPoint pointAudioStop = [gestureRecognizer locationInView:self.view];
-            CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
-            [self audioRecorderStop:(distanceAudio < 50)];
-            break;
-        }
-        case UIGestureRecognizerStatePossible:
-        case UIGestureRecognizerStateCancelled:
-        case UIGestureRecognizerStateFailed:
-            break;
-    }
-}
-
--(void)audioRecorderInit {
-    NSLog(@"RECORDING");
-    NSString *dir = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
-    NSString *path = [dir stringByAppendingString:@"audioRecorder.mp3"];
-    NSError *error;
-    
-    NSDictionary *settings = @{
-                               AVFormatIDKey : @(kAudioFormatMPEGLayer3),
-                               AVSampleRateKey : @(44100),
-                               AVNumberOfChannelsKey : @(2)
-                               };
-    
-    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:path] settings:settings error:&error];
-    audioRecorder.meteringEnabled = YES;
-    
-    [audioRecorder prepareToRecord];
-}
-
--(void)audioRecorderStart {
-    [audioRecorder record];
-    
-    dateAudioStart = [NSDate date];
-    
-    timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
-    
-    [self audioRecorderUpdate];
-}
-
--(void)audioRecorderStop:(BOOL)sending {
-    [audioRecorder stop];
-    
-    [timerAudio invalidate];
-    timerAudio = nil;
-    
-    if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
-        
-    } else {
-        [audioRecorder deleteRecording];
-    }
-}
-
--(void)audioRecorderUpdate {
-    NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:dateAudioStart];
-    int millisec = (int) (interval * 100) % 100;
-    int seconds = (int) interval % 60;
-    int minutes = (int) interval / 60;
-    //    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
 }
 
 - (void)viewDidLoad {
@@ -125,12 +52,7 @@
     self.node.tableNode.delegate = self; // actually redundant bc MXRMessenger sets it
     self.node.tableNode.dataSource = self;
     self.node.tableNode.allowsSelection = YES;
-    
-    UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(audioRecorderGesture:)];
-    gesture.minimumPressDuration = 1;
-    gesture.cancelsTouchesInView = NO;
-    [self.toolbar.rightButtonsNode.view addGestureRecognizer:gesture];
-    
+ 
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAddPhotos:)];
     tap.cancelsTouchesInView = NO;
     [self.toolbar.leftButtonsNode.view addGestureRecognizer:tap];
@@ -139,8 +61,8 @@
     [self fetchMessages];
 }
 
--(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-    
+-(void)didRecordMP3Audio:(AVPlayerItem *)playerItem {
+    NSLog(@"%@",playerItem);
 }
 
 - (void)customizeCellFactory {

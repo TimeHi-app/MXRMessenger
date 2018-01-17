@@ -7,7 +7,7 @@
 //
 
 #import "ExtAudioConverter.h"
-#import "lame.h"
+@import lame;
 
 typedef struct ExtAudioConverterSettings{
     AudioStreamBasicDescription   inputPCMFormat;

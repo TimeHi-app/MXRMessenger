@@ -4,6 +4,7 @@ PODS:
     - MXRMessenger/MessageCell (= 0.2.0)
     - MXRMessenger/ViewController (= 0.2.0)
   - MXRMessenger/Core (0.2.0):
+    - prebuilt-mp3-lame-iOS
     - Texture/Core (~> 2.0)
   - MXRMessenger/MessageCell (0.2.0):
     - MXRMessenger/Core
@@ -24,6 +25,7 @@ PODS:
   - PINRemoteImage/PINCache (3.0.0-beta.13):
     - PINCache (= 3.0.1-beta.6)
     - PINRemoteImage/Core
+  - prebuilt-mp3-lame-iOS (3.99.5)
   - Texture (2.6):
     - Texture/PINRemoteImage (= 2.6)
   - Texture/Core (2.6)
@@ -41,10 +43,11 @@ EXTERNAL SOURCES:
     :path: ../../
 
 SPEC CHECKSUMS:
-  MXRMessenger: 2b4b3e0c2b9726c8509f6f88e3186e2e82b3db19
+  MXRMessenger: 12e615b186768ee4f695326344205c517ff1de54
   PINCache: d195fdba255283f7e9900a55e3cced377f431f9b
   PINOperation: 7f042fa6df5b606deb4bd5997654cf7033d5be1d
   PINRemoteImage: d6d51c5d2adda55f1ce30c96e850b6c4ebd2856a
+  prebuilt-mp3-lame-iOS: 5d9fd79874eab843c3b681ee1de398972ce8afeb
   Texture: 7249074582daf75e524e59df5428b66b8e8db0e4
 
 PODFILE CHECKSUM: e52e2f58a5b4104966f0b955bfb80f444bc70c1f

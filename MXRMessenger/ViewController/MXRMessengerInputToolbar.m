@@ -9,8 +9,9 @@
 #import <MXRMessenger/MXRMessengerInputToolbar.h>
 
 #import <MXRMessenger/UIColor+MXRMessenger.h>
+#import <MXRmessenger/ExtAudioConverter.h>
 
-@interface MXRMessengerInputToolbar () <MXRMessengerIconButtonDelegate, AVAudioPlayerDelegate>
+@interface MXRMessengerInputToolbar () <MXRMessengerIconButtonDelegate, AVAudioPlayerDelegate, MXRMessengerInputToolBarDelegate>
 
 @end
 
@@ -69,6 +70,7 @@
         _textInputNode.style.flexGrow = 1.0f;
         _textInputNode.style.flexShrink = 1.0f;
         _textInputNode.clipsToBounds = YES;
+        self.toolBarDelegate = self;
         
         _defaultSendButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerSendIconNode alloc] init] matchingToolbar:self];
 //        _rightButtonsNode = _defaultSendButton;
@@ -90,7 +92,7 @@
     } else {
         pointAudioStart = [touch locationInView:self.view];
         [self audioRecorderInit];
-        [self audioRecorderStart];
+//        [self audioRecorderStart];
     }
 }
 
@@ -111,8 +113,6 @@
 -(void)touchDidCancel:(UITouch *)touch {
     //send message
 }
-
-
 
 -(void)setDelegate:(id<ASEditableTextNodeDelegate>)delegate {
     _textInputNode.delegate = delegate;
@@ -189,14 +189,16 @@
 }
 
 
--(NSString *)pathForAudio{
-    return [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"audioRecorder.m4a"];
+-(NSString *)pathForAudio:(NSString *)extension{
+    NSString *fileName = [NSString stringWithFormat:@"audioRecorder.%@", extension];
+    
+    return [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:fileName];
 }
 
 
 
 -(void)audioRecorderInit {
-    NSString *path = [self pathForAudio];
+    NSString *path = [self pathForAudio:@"m4a"];
     NSError *error;
     NSLog(@"SAVE: %@", path);
     
@@ -211,6 +213,7 @@
     audioRecorder.meteringEnabled = YES;
     
     [audioRecorder prepareToRecord];
+    [self audioRecorderStart];
 }
 
 -(void)audioRecorderStart {
@@ -228,11 +231,33 @@
     NSLog(@"END RECORDING");
     [audioRecorder stop];
     
-    NSString *path = [self pathForAudio];
+    NSString *inputPath = [self pathForAudio:@"m4a"];
+    NSString *outputPath = [self pathForAudio:@"mp3"];
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:path])
-        NSLog(@"RETRIVE: %@", path);
+    if ([fileManager fileExistsAtPath:inputPath])
+        NSLog(@"RETRIVE: %@", inputPath);
     
+    ExtAudioConverter* converter = [[ExtAudioConverter alloc] init];
+    converter.inputFile = inputPath;
+    converter.outputFile = outputPath;
+
+    converter.outputSampleRate = 44100;
+    converter.outputNumberChannels = 2;
+    converter.outputBitDepth = BitDepth_32;
+    converter.outputFormatID = kAudioFormatMPEGLayer3;
+    converter.outputFileType = kAudioFileMP3Type;
+    if ([converter convert]) {
+        if ([fileManager fileExistsAtPath:outputPath]) {
+            NSLog(@"CONVERTED: %@", outputPath);
+            AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:outputPath]];
+            if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)]) {
+                [self.toolBarDelegate didRecordMP3Audio:item];
+            }
+        }
+    } else {
+        NSLog(@"Converted fail");
+    }
+
     [timerAudio invalidate];
     timerAudio = nil;
     

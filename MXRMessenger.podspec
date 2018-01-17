@@ -32,6 +32,7 @@ The MessageCell subspec features a Facebook-style chat bubble-grouping system.
       'MXRMessenger/Core/**/*.{h,m}'
     ]
     core.dependency 'Texture/Core', '~> 2.0'
+    core.dependency 'prebuilt-mp3-lame-iOS'
   end
 
   s.subspec 'ViewController' do |vc|
