@@ -73,17 +73,18 @@
 -(void)createDurationTextField {
     if (_durationTextNode == nil) {
         
+        _durationTextNode = [ASTextNode new];
+        
         NSDictionary *options = @{
                                   NSFontAttributeName : [UIFont systemFontOfSize:12.0],
                                   NSForegroundColorAttributeName: [UIColor blackColor]
                                   };
         NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:[self timeStringForCMTime:self.duration] attributes:options];
         
-        
         _durationTextNode.attributedText = attributedString;
         _durationTextNode.truncationMode = NSLineBreakByClipping;
     }
-    //    [self addSubnode:_durationTextNode];
+//        [self addSubnode:_durationTextNode];
 }
 
 -(void)createPlayButtonNode {
