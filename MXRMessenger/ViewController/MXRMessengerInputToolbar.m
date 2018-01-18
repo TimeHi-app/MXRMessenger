@@ -13,6 +13,9 @@
 
 @interface MXRMessengerInputToolbar () <MXRMessengerIconButtonDelegate, AVAudioPlayerDelegate, MXRMessengerInputToolBarDelegate>
 
+@property (strong, nonatomic) NSString *inputPath;
+@property (strong, nonatomic) NSString *outputPath;
+
 @end
 
 @implementation MXRMessengerInputToolbar {
@@ -202,16 +205,16 @@
 -(void)audioRecorderInit {
     NSError *error;
     
-    NSString *inputPath = [self pathForAudio:@"m4a"];
-    NSString *outputPath = [self pathForAudio:@"mp3"];
+    self.inputPath = [self pathForAudio:@"m4a"];
+    self.outputPath = [self pathForAudio:@"mp3"];
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:inputPath])
-        [fileManager removeItemAtPath:inputPath error:&error];
-    if ([fileManager fileExistsAtPath:outputPath])
-        [fileManager removeItemAtPath:outputPath error:&error];
+    if ([fileManager fileExistsAtPath:self.inputPath])
+        [fileManager removeItemAtPath:self.inputPath error:&error];
+    if ([fileManager fileExistsAtPath:self.outputPath])
+        [fileManager removeItemAtPath:self.outputPath error:&error];
     
     NSLog(@"ERROR: %@", [error description]);
-    NSLog(@"SAVE: %@", inputPath);
+    NSLog(@"SAVE: %@", self.inputPath);
     
     NSDictionary *settings = @{
                                AVFormatIDKey : @(kAudioFormatMPEG4AAC),
@@ -219,7 +222,7 @@
                                AVNumberOfChannelsKey : @(2)
                                };
     
-    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:inputPath] settings:settings error:&error];
+    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:self.inputPath] settings:settings error:&error];
     NSLog(@"ERROR: %@", [error description]);
     audioRecorder.meteringEnabled = YES;
     
@@ -241,16 +244,14 @@
 -(void)audioRecorderStop:(BOOL)sending {
     NSLog(@"END RECORDING");
     [audioRecorder stop];
-    
-    NSString *inputPath = [self pathForAudio:@"m4a"];
-    NSString *outputPath = [self pathForAudio:@"mp3"];
+
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:inputPath])
-        NSLog(@"RETRIVE: %@", inputPath);
+    if ([fileManager fileExistsAtPath:self.inputPath])
+        NSLog(@"RETRIVE: %@", self.inputPath);
     
     ExtAudioConverter* converter = [[ExtAudioConverter alloc] init];
-    converter.inputFile = inputPath;
-    converter.outputFile = outputPath;
+    converter.inputFile = self.inputPath;
+    converter.outputFile = self.outputPath;
     
     converter.outputSampleRate = 44100;
     converter.outputNumberChannels = 2;
@@ -258,9 +259,9 @@
     converter.outputFormatID = kAudioFormatMPEGLayer3;
     converter.outputFileType = kAudioFileMP3Type;
     if ([converter convert]) {
-        if ([fileManager fileExistsAtPath:outputPath]) {
-            NSLog(@"CONVERTED: %@", outputPath);
-            AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:outputPath]];
+        if ([fileManager fileExistsAtPath:self.outputPath]) {
+            NSLog(@"CONVERTED: %@", self.outputPath);
+            AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:self.outputPath]];
             
             if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)]) {
                 [self.toolBarDelegate didRecordMP3Audio:item];
