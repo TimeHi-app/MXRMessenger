@@ -197,7 +197,7 @@
     int r = arc4random_uniform(5000);
     NSString *fileName = [NSString stringWithFormat:@"audioRecorder%d.%@", r, extension];
     
-    return [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:fileName];
+    return [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
 }
 
 
