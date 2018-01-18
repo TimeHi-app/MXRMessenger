@@ -29,7 +29,6 @@
     NSDate *dateAudioStart;
     
     BOOL isTyping;
-    UIView *buttonView;
 }
 
 - (instancetype)init {
@@ -135,7 +134,6 @@
     if (_leftButtonsNode) [inputBarChildren addObject:_leftButtonsNode];
     
     _rightButtonsNode = isTyping ? _defaultSendButton : _audioInputButton;
-    buttonView = _rightButtonsNode.view;
     
     ASInsetLayoutSpec* textInputInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:_textInputInsets child:_textInputNode];
     ASBackgroundLayoutSpec* textInputWithBackground = [ASBackgroundLayoutSpec backgroundLayoutSpecWithChild:textInputInset background:_textInputBackgroundNode];
@@ -262,6 +260,7 @@
         if ([fileManager fileExistsAtPath:self.outputPath]) {
             NSLog(@"CONVERTED: %@", self.outputPath);
             AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:self.outputPath]];
+            
             
             if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)]) {
                 [self.toolBarDelegate didRecordMP3Audio:item];

@@ -182,8 +182,11 @@
             slider.minimumTrackTintColor = [UIColor colorWithRed:144/255.0f green:18/255.0f blue:254/255.0f alpha:1.0f];
             slider.maximumTrackTintColor = [UIColor whiteColor];
             
-            UIImage *thumbImage = [self drawPlay];
+            MXRMessengerSliderNode *thumbImage = [MXRMessengerSliderNode new];
+            
             [slider setThumbImage:thumbImage forState:UIControlStateNormal];
+            
+            
             
             [slider addTarget:strongSelf action:@selector(beginSeek) forControlEvents:UIControlEventTouchDown];
             [slider addTarget:strongSelf action:@selector(endSeek) forControlEvents:UIControlEventTouchUpInside|UIControlEventTouchUpOutside|UIControlEventTouchCancel];
@@ -346,6 +349,26 @@
 @end
 
 @implementation MXRMessengerPauseButtonNode
+@end
+
+@implementation MXRMessengerSliderNode
+-(void)drawInRect:(CGRect)rect {
+    CGRect rect2 = CGRectMake(0.0, 0.0, 15.0, 15.0);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    UIGraphicsPushContext(context);
+    UIGraphicsBeginImageContextWithOptions(rect2.size, NO, [UIScreen mainScreen].scale);
+    UIColor* color0 = [UIColor colorWithRed: 0.245 green: 0.289 blue: 0.998 alpha: 1];
+    
+    UIBezierPath* oval5CopyPath = [UIBezierPath bezierPathWithOvalInRect: CGRectMake(0, 0, 15, 15)];
+    [color0 setFill];
+    [oval5CopyPath fill];
+    
+    CGContextAddPath(context, oval5CopyPath.CGPath);
+//    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    CGContextSaveGState(context);
+    UIGraphicsPopContext();
+    UIGraphicsEndImageContext();
+}
 @end
 
 @implementation MXRMessengerAudioIconButtonNode
