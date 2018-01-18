@@ -82,13 +82,6 @@
     imageConfig.maxCornerRadius = maxCornerRadius;
     MXRMessageMediaCollectionConfiguration* mediaCollectionConfig = [[MXRMessageMediaCollectionConfiguration alloc] init];
     mediaCollectionConfig.maxCornerRadius = maxCornerRadius;
-
-    ASButtonNode *playButton = [[ASButtonNode alloc] init];
-    ASButtonNode *pauseButton = [[ASButtonNode alloc] init];
-    playButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
-    [playButton setImage:[UIImage imageNamed:@"group5"] forState:UIControlStateNormal];
-    pauseButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
-    [pauseButton setImage:[UIImage imageNamed:@"group6"] forState:UIControlStateNormal];
     
     MXRMessageAudioConfiguration *audioConfig = [[MXRMessageAudioConfiguration alloc] initWithBackgroundColor:[UIColor mxr_bubbleBlueGrey] playButton:[UIImage imageNamed:@"group5"] pauseButton:[UIImage imageNamed:@"group6"]];
     audioConfig.maxCornerRadius = maxCornerRadius;

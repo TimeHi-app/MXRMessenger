@@ -20,7 +20,7 @@
 @property (nonatomic, strong, readonly) NSURL *audioURL;
 
 
-- (instancetype)initWithAudioURL:(NSURL *)audioURL configuration:(MXRMessageAudioConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornerHavingRadius NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithAudioURL:(NSURL *)audioURL duration:(NSUInteger)duration configuration:(MXRMessageAudioConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornerHavingRadius NS_DESIGNATED_INITIALIZER;
 
 @end
 

@@ -261,6 +261,7 @@
         if ([fileManager fileExistsAtPath:outputPath]) {
             NSLog(@"CONVERTED: %@", outputPath);
             AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:outputPath]];
+            
             if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)]) {
                 [self.toolBarDelegate didRecordMP3Audio:item];
             }

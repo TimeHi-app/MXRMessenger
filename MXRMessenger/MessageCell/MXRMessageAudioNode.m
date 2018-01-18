@@ -32,7 +32,7 @@
     UIRectCorner _cornersHavingRadius;
 }
 
--(instancetype)initWithAudioURL:(NSURL *)audioURL configuration:(MXRMessageAudioConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornerHavingRadius {
+-(instancetype)initWithAudioURL:(NSURL *)audioURL duration:(NSUInteger)duration configuration:(MXRMessageAudioConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornerHavingRadius {
     if (self = [super initWithConfiguration:configuration]) {
         self.automaticallyManagesSubnodes = YES;
         _configuration = configuration;
@@ -41,6 +41,7 @@
         _audioURL = audioURL;
         _playImage = configuration.playButtonNode;
         _pauseImage = configuration.pauseButtonNode;
+        _duration = CMTimeMake(duration, 10000);
         
         [self createDurationTextField];
         [self createPlayButtonNode];
@@ -56,12 +57,12 @@
 
 -(instancetype)init {
     ASDISPLAYNODE_NOT_DESIGNATED_INITIALIZER();
-    return [self initWithAudioURL:nil configuration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners];
+    return [self initWithAudioURL:nil duration:0 configuration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners];
 }
 
 -(instancetype)initWithConfiguration:(MXRMessageNodeConfiguration *)configuration {
     ASDISPLAYNODE_NOT_DESIGNATED_INITIALIZER();
-    return [self initWithAudioURL:nil configuration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners];
+    return [self initWithAudioURL:nil duration:0 configuration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners];
 }
 
 -(AVPlayerItem *)item {
@@ -72,7 +73,6 @@
 
 -(void)createDurationTextField {
     if (_durationTextNode == nil) {
-        
         _durationTextNode = [ASTextNode new];
         
         NSDictionary *options = @{
@@ -90,8 +90,10 @@
 -(void)createPlayButtonNode {
     if (_playButton == nil) {
         _playButton = [[MXRMessengerPlayButtonNode alloc] init];
-        _playButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
         [_playButton setImage:_playImage forState:UIControlStateNormal];
+        _playButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
+        
+        
     }
     [_playButton addTarget:self action:@selector(didTapPlayButton) forControlEvents:ASControlNodeEventTouchUpInside];
     //    [self addSubnode:_playButton];
