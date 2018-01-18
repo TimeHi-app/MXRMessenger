@@ -68,26 +68,26 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
 }
 
 - (MXRMessageTextCellNodeBlock)cellNodeBlockWithText:(NSString *)text tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageTextCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeTextOnly text:text imageURL:nil showsPlayButton:NO media:nil audioURL:nil tableNode:tableNode row:row];
+    return (MXRMessageTextCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeTextOnly text:text imageURL:nil showsPlayButton:NO media:nil audioURL:nil duration:0 tableNode:tableNode row:row];
 }
 
 - (MXRMessageImageCellNodeBlock)cellNodeBlockWithImageURL:(NSURL *)imageURL showsPlayButton:(BOOL)showsPlayButton tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageImageCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeImageOnly text:nil imageURL:imageURL showsPlayButton:showsPlayButton media:nil audioURL:nil tableNode:tableNode row:row];
+    return (MXRMessageImageCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeImageOnly text:nil imageURL:imageURL showsPlayButton:showsPlayButton media:nil audioURL:nil duration:0 tableNode:tableNode row:row];
 }
 
 - (MXRMessageMediaCollectionCellNodeBlock)cellNodeBlockWithMedia:(NSArray<id<MXRMessengerMedium>> *)media tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageMediaCollectionCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeMediaCollectionOnly text:nil imageURL:nil showsPlayButton:YES media:media audioURL:nil tableNode:tableNode row:row];
+    return (MXRMessageMediaCollectionCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeMediaCollectionOnly text:nil imageURL:nil showsPlayButton:YES media:media audioURL:nil duration:0 tableNode:tableNode row:row];
 }
 
 - (MXRMessageSystemCellNodeBlock)cellNodeBlockWithSystem:(NSString *)system tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageSystemCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeSystemOnly text:system imageURL:nil showsPlayButton:NO media:nil audioURL:nil tableNode:tableNode row:row];
+    return (MXRMessageSystemCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeSystemOnly text:system imageURL:nil showsPlayButton:NO media:nil audioURL:nil duration:0 tableNode:tableNode row:row];
 }
 
-- (MXRMessageAudioCellNodeBlock)cellNodeBlockWithAudio:(NSURL *)audioURL tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageAudioCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeAudioOnly text:nil imageURL:nil showsPlayButton:NO media:nil audioURL:audioURL tableNode:tableNode row:row];
+- (MXRMessageAudioCellNodeBlock)cellNodeBlockWithAudio:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
+    return (MXRMessageAudioCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeAudioOnly text:nil imageURL:nil showsPlayButton:NO media:nil audioURL:audioURL duration:duration tableNode:tableNode row:row];
 }
 
-- (ASCellNodeBlock)cellNodeBlockWithType:(MXRMessageContentType)type text:(NSString *)text imageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton media:(NSArray<id<MXRMessengerMedium>> *)media audioURL:(NSURL *)audioURL tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
+- (ASCellNodeBlock)cellNodeBlockWithType:(MXRMessageContentType)type text:(NSString *)text imageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton media:(NSArray<id<MXRMessengerMedium>> *)media audioURL:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
     // we query the datasource before entering block, all other computations can go in the async block
 
     __block MXRMessageContext context; __block MXRMessageContext previousContext; __block MXRMessageContext nextContext;
@@ -144,7 +144,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             MXRMessageSystemNode *systemNode = [[MXRMessageSystemNode alloc] initWithText:text configuration:config.systemConfig cornersToApplyMaxRadius:cornersHavingRadius];
             cell.messageContentNode = systemNode;
         } else if (type == MXRMessageContentTypeAudioOnly) {
-            MXRMessageAudioNode *audioNode = [[MXRMessageAudioNode alloc] initWithAudioURL:audioURL configuration:config.audioConfig cornersToApplyMaxRadius:cornersHavingRadius];
+            MXRMessageAudioNode *audioNode = [[MXRMessageAudioNode alloc] initWithAudioURL:audioURL duration:duration configuration:config.audioConfig cornersToApplyMaxRadius:cornersHavingRadius];
             cell.messageContentNode = audioNode;
         }
 

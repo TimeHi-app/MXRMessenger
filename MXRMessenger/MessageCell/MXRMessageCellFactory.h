@@ -49,7 +49,7 @@
 - (MXRMessageImageCellNodeBlock)cellNodeBlockWithImageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
 - (MXRMessageMediaCollectionCellNodeBlock)cellNodeBlockWithMedia:(NSArray<id<MXRMessengerMedium>>*)media tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
 - (MXRMessageSystemCellNodeBlock)cellNodeBlockWithSystem:(NSString *)system tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
-- (MXRMessageAudioCellNodeBlock)cellNodeBlockWithAudio:(NSURL *)audioURL tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
+- (MXRMessageAudioCellNodeBlock)cellNodeBlockWithAudio:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
 
 - (ASDisplayNode*)headerNodeFromDate:(NSDate*)date;
 - (void)toggleDateHeaderNodeVisibilityForCellNode:(MXRMessageCellNode*)cellNode;

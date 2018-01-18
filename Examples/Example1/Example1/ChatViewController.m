@@ -148,14 +148,14 @@
 
 - (ASCellNodeBlock)tableNode:(ASTableNode *)tableNode nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath {
     Message* message = self.messages[indexPath.row];
-//    if (message.media.count > 1) {
+//    if (message.media.count > 1) 
 //        return [self.cellFactory cellNodeBlockWithMedia:message.media tableNode:tableNode row:indexPath.row];
 //    } else if (message.media.count == 1) {
 //        MessageMedium* medium = message.media.firstObject;
 //        return [self.cellFactory cellNodeBlockWithImageURL:medium.photoURL showsPlayButton:(medium.videoURL != nil) tableNode:tableNode row:indexPath.row];
 //    } else {
 //        return [self.cellFactory cellNodeBlockWithSystem:message.text tableNode:tableNode row:indexPath.row];
-        return [self.cellFactory cellNodeBlockWithAudio:[NSURL URLWithString:@"http://devimages.apple.com/iphone/samples/bipbop/gear3/prog_index.m3u8"] tableNode:tableNode row:indexPath.row];
+    return [self.cellFactory cellNodeBlockWithAudio:[NSURL URLWithString:@"http://devimages.apple.com/iphone/samples/bipbop/gear3/prog_index.m3u8"] duration:10 tableNode:tableNode row:indexPath.row];
 //    }
 }
 
