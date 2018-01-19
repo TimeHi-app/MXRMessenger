@@ -12,7 +12,7 @@
 
 @protocol MXRMessengerInputToolBarDelegate <NSObject>
 
--(void)didRecordMP3Audio:(AVPlayerItem *)playerItem;
+-(void)didRecordMP3Audio:(NSData *)playerItem;
 -(void)didTapSendButton;
 
 @end

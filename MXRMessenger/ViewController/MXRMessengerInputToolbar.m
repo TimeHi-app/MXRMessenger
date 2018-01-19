@@ -11,10 +11,15 @@
 #import <MXRMessenger/UIColor+MXRMessenger.h>
 #import <MXRmessenger/ExtAudioConverter.h>
 
+@import lame;
+
 @interface MXRMessengerInputToolbar () <MXRMessengerIconButtonDelegate, AVAudioPlayerDelegate, MXRMessengerInputToolBarDelegate>
 
 @property (strong, nonatomic) NSString *inputPath;
 @property (strong, nonatomic) NSString *outputPath;
+@property (assign, nonatomic) lame_t lame;
+@property (strong, nonatomic) AVAudioEngine *engine;
+@property (strong, nonatomic) NSMutableData *file;
 
 @end
 
@@ -29,6 +34,8 @@
     NSDate *dateAudioStart;
     
     BOOL isTyping;
+    
+    unsigned char mp3[4096];
 }
 
 - (instancetype)init {
@@ -44,6 +51,11 @@
         self.backgroundColor = [UIColor whiteColor];
         _font = font;
         _tintColor = tintColor;
+        
+        self.engine = [AVAudioEngine new];
+        self.file = [NSMutableData new];
+        
+        [self prepareLame];
         // #8899a6 alpha 0.85
         UIColor* placeholderGray = [UIColor colorWithRed:0.53 green:0.60 blue:0.65 alpha:0.85];
         // #f5f8fa
@@ -201,31 +213,32 @@
 
 
 -(void)audioRecorderInit {
-    NSError *error;
-    
-    self.inputPath = [self pathForAudio:@"m4a"];
-    self.outputPath = [self pathForAudio:@"mp3"];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:self.inputPath])
-        [fileManager removeItemAtPath:self.inputPath error:&error];
-    if ([fileManager fileExistsAtPath:self.outputPath])
-        [fileManager removeItemAtPath:self.outputPath error:&error];
-    
-    NSLog(@"ERROR: %@", [error description]);
-    NSLog(@"SAVE: %@", self.inputPath);
-    
-    NSDictionary *settings = @{
-                               AVFormatIDKey : @(kAudioFormatMPEG4AAC),
-                               AVSampleRateKey : @(44100),
-                               AVNumberOfChannelsKey : @(2)
-                               };
-    
-    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:self.inputPath] settings:settings error:&error];
-    NSLog(@"ERROR: %@", [error description]);
-    audioRecorder.meteringEnabled = YES;
-    
-    [audioRecorder prepareToRecord];
-    [self audioRecorderStart];
+//    NSError *error;
+//
+//    self.inputPath = [self pathForAudio:@"m4a"];
+//    self.outputPath = [self pathForAudio:@"mp3"];
+//    NSFileManager *fileManager = [NSFileManager defaultManager];
+//    if ([fileManager fileExistsAtPath:self.inputPath])
+//        [fileManager removeItemAtPath:self.inputPath error:&error];
+//    if ([fileManager fileExistsAtPath:self.outputPath])
+//        [fileManager removeItemAtPath:self.outputPath error:&error];
+//
+//    NSLog(@"ERROR: %@", [error description]);
+//    NSLog(@"SAVE: %@", self.inputPath);
+//
+//    NSDictionary *settings = @{
+//                               AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+//                               AVSampleRateKey : @(44100),
+//                               AVNumberOfChannelsKey : @(2)
+//                               };
+//
+//    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:self.inputPath] settings:settings error:&error];
+//    NSLog(@"ERROR: %@", [error description]);
+//    audioRecorder.meteringEnabled = YES;
+//
+//    [audioRecorder prepareToRecord];
+//    [self audioRecorderStart];
+    [self installTap];
 }
 
 -(void)audioRecorderStart {
@@ -239,45 +252,108 @@
     [self audioRecorderUpdate];
 }
 
--(void)audioRecorderStop:(BOOL)sending {
-    NSLog(@"END RECORDING");
-    [audioRecorder stop];
+-(void)prepareLame {
+    
+    double sampleRate = [self.engine.inputNode inputFormatForBus:0].sampleRate;
+    
+    self.lame = lame_init();
+    lame_set_in_samplerate(_lame, sampleRate / 2);
+    lame_set_VBR(_lame, vbr_default);
+    lame_set_out_samplerate(_lame, 0);
+    lame_set_quality(_lame, 4);
+    lame_init_params(_lame);
+}
 
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:self.inputPath])
-        NSLog(@"RETRIVE: %@", self.inputPath);
-    
-    ExtAudioConverter* converter = [[ExtAudioConverter alloc] init];
-    converter.inputFile = self.inputPath;
-    converter.outputFile = self.outputPath;
-    
-    converter.outputSampleRate = 44100;
-    converter.outputNumberChannels = 2;
-    converter.outputBitDepth = BitDepth_32;
-    converter.outputFormatID = kAudioFormatMPEGLayer3;
-    converter.outputFileType = kAudioFileMP3Type;
-    if ([converter convert]) {
-        if ([fileManager fileExistsAtPath:self.outputPath]) {
-            NSLog(@"CONVERTED: %@", self.outputPath);
-            AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:self.outputPath]];
+-(void)installTap {
+    NSError *error;
+    self.engine = [[AVAudioEngine alloc] init];
+    AVAudioInputNode *input = self.engine.inputNode;
+    AVAudioFormat *format = [input inputFormatForBus:0];
+    [input installTapOnBus:0 bufferSize:4096 format:format block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
+        if (buffer.floatChannelData[0]) {
+            int32_t frameLenght = buffer.frameLength / 2;
+            int bytesWritten = lame_encode_buffer_interleaved_ieee_float(self.lame, buffer.floatChannelData[0], frameLenght, mp3, 4096);
             
-            
-            if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)]) {
-                [self.toolBarDelegate didRecordMP3Audio:item];
-            }
+            [self.file appendBytes:mp3 length:bytesWritten];
         }
-    } else {
-        NSLog(@"Converted fail");
-    }
+    }];
     
-    [timerAudio invalidate];
-    timerAudio = nil;
+    [self.engine prepare];
+    [self.engine startAndReturnError:&error];
+}
+
+-(void)removeTap {
+    [self.engine.inputNode removeTapOnBus:0];
+    self.engine = nil;
+    NSError *error;
     
-    if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
-        
-    } else {
-        [audioRecorder deleteRecording];
-    }
+    NSURL *url = [[NSFileManager defaultManager] URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:&error];
+    [url URLByAppendingPathComponent:@"audio.mp3"];
+    
+    [self.file writeToURL:url atomically:YES];
+    
+    if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)])
+        [self.toolBarDelegate didRecordMP3Audio:[self.file copy]];
+}
+
+-(void)audioRecorderStop:(BOOL)sending {
+    [self removeTap];
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+//    NSLog(@"END RECORDING");
+//    [audioRecorder stop];
+//
+//    NSFileManager *fileManager = [NSFileManager defaultManager];
+//    if ([fileManager fileExistsAtPath:self.inputPath])
+//        NSLog(@"RETRIVE: %@", self.inputPath);
+//
+//    ExtAudioConverter* converter = [[ExtAudioConverter alloc] init];
+//    converter.inputFile = self.inputPath;
+//    converter.outputFile = self.outputPath;
+//
+//    converter.outputSampleRate = 44100;
+//    converter.outputNumberChannels = 2;
+//    converter.outputBitDepth = BitDepth_16;
+//    converter.outputFormatID = kAudioFormatMPEGLayer3;
+//    converter.outputFileType = kAudioFileMP3Type;
+//    if ([converter convert]) {
+//        if ([fileManager fileExistsAtPath:self.outputPath]) {
+//            NSLog(@"CONVERTED: %@", self.outputPath);
+//            AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:self.outputPath]];
+//
+//
+//            if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)]) {
+//                [self.toolBarDelegate didRecordMP3Audio:item];
+//            }
+//        }
+//    } else {
+//        NSLog(@"Converted fail");
+//    }
+//
+//    [timerAudio invalidate];
+//    timerAudio = nil;
+//
+//    if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
+//
+//    } else {
+//        [audioRecorder deleteRecording];
+//    }
 }
 
 -(void)audioRecorderUpdate {
