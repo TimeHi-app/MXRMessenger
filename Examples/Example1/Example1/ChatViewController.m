@@ -61,8 +61,17 @@
     [self fetchMessages];
 }
 
--(void)didRecordMP3Audio:(AVPlayerItem *)playerItem {
-    NSLog(@"%@",playerItem);
+-(void)didRecordMP3Audio:(NSURL *)playerItem {
+    Message* message = [[Message alloc] init];
+    MessageMedium *medium = [MessageMedium new];
+//    NSString *strng = [playerItem.absoluteString substringFromIndex:7];
+//    medium.audioURL = [NSURL URLWithString:strng];
+    medium.audioURL = playerItem;
+    message.media = @[medium];
+    message.senderID = 0;
+    message.timestamp = [NSDate date].timeIntervalSince1970;
+    [self.messages insertObject:message atIndex:0];
+    [self.cellFactory updateTableNode:self.node.tableNode animated:YES withInsertions:@[[NSIndexPath indexPathForRow:0 inSection:0]] deletions:nil reloads:nil completion:nil];
 }
 
 - (void)customizeCellFactory {
@@ -155,7 +164,10 @@
 //        return [self.cellFactory cellNodeBlockWithImageURL:medium.photoURL showsPlayButton:(medium.videoURL != nil) tableNode:tableNode row:indexPath.row];
 //    } else {
 //        return [self.cellFactory cellNodeBlockWithSystem:message.text tableNode:tableNode row:indexPath.row];
-    return [self.cellFactory cellNodeBlockWithAudio:[NSURL URLWithString:@"http://devimages.apple.com/iphone/samples/bipbop/gear3/prog_index.m3u8"] duration:10 tableNode:tableNode row:indexPath.row];
+    
+//    [NSURL URLWithString:@"http://devimages.apple.com/iphone/samples/bipbop/gear3/prog_index.m3u8"]
+            MessageMedium* medium = message.media.firstObject;
+    return [self.cellFactory cellNodeBlockWithAudio:medium.audioURL duration:10 tableNode:tableNode row:indexPath.row];
 //    }
 }
 

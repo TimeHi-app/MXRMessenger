@@ -27,5 +27,6 @@
 
 @property (nonatomic, strong) NSURL* photoURL;
 @property (nonatomic, strong) NSURL* videoURL;
+@property (nonatomic, strong) NSURL* audioURL;
 
 @end

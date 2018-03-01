@@ -29,7 +29,7 @@
     UIEdgeInsets _finalInsets;
     
     CGPoint pointAudioStart;
-    AVAudioRecorder *audioRecorder;
+    AVAudioRecorder* _audioRecorder;
     NSTimer *timerAudio;
     NSDate *dateAudioStart;
     
@@ -52,10 +52,10 @@
         _font = font;
         _tintColor = tintColor;
         
-        self.engine = [AVAudioEngine new];
-        self.file = [NSMutableData new];
+//        self.engine = [AVAudioEngine new];
+//        self.file = [NSMutableData new];
         
-        [self prepareLame];
+//        [self prepareLame];
         // #8899a6 alpha 0.85
         UIColor* placeholderGray = [UIColor colorWithRed:0.53 green:0.60 blue:0.65 alpha:0.85];
         // #f5f8fa
@@ -66,6 +66,8 @@
         CGFloat heightOfTextNode = ceilf(topPadding + bottomPadding + font.lineHeight);
         _heightOfTextNodeWithOneLineOfText = heightOfTextNode;
         CGFloat cornerRadius = floorf(heightOfTextNode / 2.0f);
+        
+        [self setupAudioRecorder];
         
         _textInputInsets = UIEdgeInsetsMake(topPadding, 0.7f*cornerRadius, bottomPadding, 0.7f*cornerRadius);
         
@@ -178,29 +180,29 @@
     return text;
 }
 
--(void)audioRecorderGesture:(UILongPressGestureRecognizer *)gestureRecognizer {
-    switch (gestureRecognizer.state) {
-        case UIGestureRecognizerStateBegan: {
-            pointAudioStart = [gestureRecognizer locationInView:self.view];
-            [self audioRecorderInit];
-            [self audioRecorderStart];
-            break;
-        }
-        case UIGestureRecognizerStateChanged: {
-            break;
-        }
-        case UIGestureRecognizerStateEnded: {
-            CGPoint pointAudioStop = [gestureRecognizer locationInView:self.view];
-            CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
-            [self audioRecorderStop:(distanceAudio < 50)];
-            break;
-        }
-        case UIGestureRecognizerStatePossible:
-        case UIGestureRecognizerStateCancelled:
-        case UIGestureRecognizerStateFailed:
-            break;
-    }
-}
+//-(void)audioRecorderGesture:(UILongPressGestureRecognizer *)gestureRecognizer {
+//    switch (gestureRecognizer.state) {
+//        case UIGestureRecognizerStateBegan: {
+//            pointAudioStart = [gestureRecognizer locationInView:self.view];
+//            [self audioRecorderInit];
+////            [self audioRecorderStart];
+//            break;
+//        }
+//        case UIGestureRecognizerStateChanged: {
+//            break;
+//        }
+//        case UIGestureRecognizerStateEnded: {
+//            CGPoint pointAudioStop = [gestureRecognizer locationInView:self.view];
+//            CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
+//            [self audioRecorderStop:(distanceAudio < 50)];
+//            break;
+//        }
+//        case UIGestureRecognizerStatePossible:
+//        case UIGestureRecognizerStateCancelled:
+//        case UIGestureRecognizerStateFailed:
+//            break;
+//    }
+//}
 
 
 -(NSString *)pathForAudio:(NSString *)extension{
@@ -210,9 +212,28 @@
     return [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
 }
 
-
+-(void)setupAudioRecorder {
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    [session setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
+    
+    NSError *error;
+    
+    NSDictionary *settings = @{
+                               AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+                               AVSampleRateKey : @(44100),
+                               AVNumberOfChannelsKey : @(2)
+                               };
+    
+    self.inputPath = [self pathForAudio:@"m4a"];
+    _audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:self.inputPath] settings:settings error:&error];
+    NSLog(@"ERROR: %@", [error description]);
+    _audioRecorder.meteringEnabled = YES;
+    
+    [_audioRecorder prepareToRecord];
+}
 
 -(void)audioRecorderInit {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 //    NSError *error;
 //
 //    self.inputPath = [self pathForAudio:@"m4a"];
@@ -237,12 +258,17 @@
 //    audioRecorder.meteringEnabled = YES;
 //
 //    [audioRecorder prepareToRecord];
-//    [self audioRecorderStart];
-    [self installTap];
+    [self audioRecorderStart];
+//    [self installTap];
 }
 
 -(void)audioRecorderStart {
-    [audioRecorder record];
+    NSError *error;
+    
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    [session setActive:YES error:&error];
+    
+    [_audioRecorder record];
     
     dateAudioStart = [NSDate date];
     
@@ -265,8 +291,10 @@
 }
 
 -(void)installTap {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     NSError *error;
-    self.engine = [[AVAudioEngine alloc] init];
+    if (!self.engine)
+        self.engine = [[AVAudioEngine alloc] init];
     AVAudioInputNode *input = self.engine.inputNode;
     AVAudioFormat *format = [input inputFormatForBus:0];
     [input installTapOnBus:0 bufferSize:4096 format:format block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
@@ -280,44 +308,51 @@
     
     [self.engine prepare];
     [self.engine startAndReturnError:&error];
+    dateAudioStart = [NSDate date];
+    timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
+    [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
 }
 
 -(void)removeTap {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     [self.engine.inputNode removeTapOnBus:0];
+    [self.engine stop];
     self.engine = nil;
     NSError *error;
     
-    NSURL *url = [[NSFileManager defaultManager] URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:&error];
-    [url URLByAppendingPathComponent:@"audio.mp3"];
+//    NSURL *url = [[NSFileManager defaultManager] URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:&error];
+//    [url URLByAppendingPathComponent:@"audio.mp3"];
     
-    [self.file writeToURL:url atomically:YES];
+    NSString* saveFileName = [NSString stringWithFormat:@"%f_audio.mp3",[[NSDate date] timeIntervalSince1970]];
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *path = [documentsDirectory stringByAppendingPathComponent:saveFileName];
+    
+//    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+//    NSString *folderPath = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"audio.mp3"];
+    NSString *pathURL = [NSString stringWithFormat:@"file://%@", path];
+    
+    [self.file writeToURL:[NSURL URLWithString:pathURL] options:NSDataWritingAtomic error:&error];
+    NSLog(@"%@", error);
+    
+    NSURL *url = [[NSURL alloc] initFileURLWithPath:path];
     
     if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)])
-        [self.toolBarDelegate didRecordMP3Audio:[self.file copy]];
+        [self.toolBarDelegate didRecordMP3Audio:url];
 }
 
 -(void)audioRecorderStop:(BOOL)sending {
-    [self removeTap];
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    NSLog(@"%f", [[NSDate date] timeIntervalSinceDate:dateAudioStart]);
+//    [self removeTap];
+
+    NSLog(@"END RECORDING");
+    [_audioRecorder stop];
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    [audioSession setActive:NO error:nil];
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-//    NSLog(@"END RECORDING");
-//    [audioRecorder stop];
+    if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)])
+        [self.toolBarDelegate didRecordMP3Audio:[NSURL URLWithString:self.inputPath]];
 //
 //    NSFileManager *fileManager = [NSFileManager defaultManager];
 //    if ([fileManager fileExistsAtPath:self.inputPath])
@@ -346,14 +381,14 @@
 //        NSLog(@"Converted fail");
 //    }
 //
-//    [timerAudio invalidate];
-//    timerAudio = nil;
-//
-//    if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
-//
-//    } else {
-//        [audioRecorder deleteRecording];
-//    }
+    [timerAudio invalidate];
+    timerAudio = nil;
+
+    if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
+
+    } else {
+        [_audioRecorder deleteRecording];
+    }
 }
 
 -(void)audioRecorderUpdate {
@@ -361,7 +396,7 @@
     int millisec = (int) (interval * 100) % 100;
     int seconds = (int) interval % 60;
     int minutes = (int) interval / 60;
-    //    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
+//    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
 }
 
 @end

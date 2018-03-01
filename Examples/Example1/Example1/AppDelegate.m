@@ -15,9 +15,10 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 //    [ASControlNode setEnableHitTestDebug:YES];
-    NSError *error;
-    [[AVAudioSession sharedInstance] setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:&error];
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionDuckOthers error:&error];
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    NSError *err;
+    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error:&err];
+    [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&err];
     
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     UINavigationController* nav = [[UINavigationController alloc] initWithRootViewController:[ChatsListViewController new]];

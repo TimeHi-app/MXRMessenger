@@ -13,9 +13,9 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 
-@interface MXRMessageAudioNode ()
+@interface MXRMessageAudioNode () <AVAudioPlayerDelegate>
 
-@property (strong, nonatomic) AVPlayer *audioPlayer;
+@property (strong, nonatomic) AVAudioPlayer *audioPlayer;
 @property (strong, nonatomic) AVPlayerItem *item;
 @property (assign, nonatomic) CMTime duration;
 @property (assign, nonatomic) BOOL isSeeking;
@@ -66,8 +66,13 @@
 }
 
 -(AVPlayerItem *)item {
-    if (!_item)
-        _item = [AVPlayerItem playerItemWithURL:self.audioURL];
+    if (!_item) {
+//            NSString *strng = [self.audioURL.absoluteString substringFromIndex:7];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:self.audioURL.absoluteString]) {
+            AVAsset *asset = [AVURLAsset URLAssetWithURL:self.audioURL options:nil];
+            _item = [[AVPlayerItem alloc] initWithAsset:asset];
+        }
+    }
     return _item;
 }
 
@@ -79,7 +84,7 @@
                                   NSFontAttributeName : [UIFont systemFontOfSize:12.0],
                                   NSForegroundColorAttributeName: [UIColor blackColor]
                                   };
-        NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:[self timeStringForCMTime:self.duration] attributes:options];
+        NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:[self timeStringForCMTime:self.item.asset.duration] attributes:options];
         
         _durationTextNode.attributedText = attributedString;
         _durationTextNode.truncationMode = NSLineBreakByClipping;
@@ -88,11 +93,10 @@
 }
 
 -(void)createPlayButtonNode {
-    if (_playButton == nil) {
+    if (!_playButton) {
         _playButton = [[MXRMessengerPlayButtonNode alloc] init];
         [_playButton setImage:_playImage forState:UIControlStateNormal];
         _playButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
-        
         
     }
     [_playButton addTarget:self action:@selector(didTapPlayButton) forControlEvents:ASControlNodeEventTouchUpInside];
@@ -100,7 +104,7 @@
 }
 
 -(void)createPauseButtonNode {
-    if (_pauseButton == nil) {
+    if (!_pauseButton) {
         _pauseButton = [[MXRMessengerPauseButtonNode alloc] init];
         _pauseButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
         [_pauseButton setImage:_pauseImage forState:UIControlStateNormal];
@@ -110,31 +114,44 @@
 }
 
 -(void)didTapPlayButton {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    NSError *error;
     self.isPlaying = !self.isPlaying;
     [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
     
     if (!self.audioPlayer) {
         
-        self.audioPlayer = [AVPlayer playerWithPlayerItem:self.item];
-        __weak __typeof(self) weakSelf = self;
-        [self.audioPlayer addPeriodicTimeObserverForInterval:CMTimeMake(1, 10000) queue:NULL usingBlock:^(CMTime time) {
-            [weakSelf periodicTimeObserver:time];
-        }];
-    }
-    
-    if (@available(iOS 10.0, *)) {
-        if (self.audioPlayer.timeControlStatus == AVPlayerTimeControlStatusPlaying) {
-            
-            [self.audioPlayer pause];
-        } else if (self.audioPlayer.timeControlStatus == AVPlayerTimeControlStatusPaused || self.audioPlayer.timeControlStatus == 0) {
-            
+        self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:self.audioURL error:&error];
+        self.audioPlayer.volume = 1;
+        NSLog(@"%@", error);
+        self.audioPlayer.delegate = self;
+        [self.audioPlayer prepareToPlay];
+//        [[NSNotificationCenter defaultCenter] addObserver:self
+//                                                 selector:@selector(playerItemDidReachEnd:)
+//                                                     name:AVPlayerItemDidPlayToEndTimeNotification
+//                                                   object:[self.audioPlayer currentItem]];
+//        [[NSNotificationCenter defaultCenter] addObserver:self
+//                                                 selector:@selector(playerItemDidReachEnd:)
+//                                                     name:AVPlayerItemFailedToPlayToEndTimeNotification
+//                                                   object:[self.audioPlayer currentItem]];
+//        [self.audioPlayer addObserver:self forKeyPath:@"status" options:0 context:nil];
+        
+//        __weak __typeof(self) weakSelf = self;
+//        [self.audioPlayer addPeriodicTimeObserverForInterval:CMTimeMake(1, 10000) queue:NULL usingBlock:^(CMTime time) {
+//            [weakSelf periodicTimeObserver:time];
+//        }];
+        if (self.audioPlayer.isPlaying) {
+            [self.audioPlayer stop];
+        } else {
             [self.audioPlayer play];
         }
+        
     }
 }
 
 -(void)periodicTimeObserver:(CMTime)time {
     NSTimeInterval timeInSeconds = CMTimeGetSeconds(time);
+    NSLog(@"TIME: %f", timeInSeconds);
     if (timeInSeconds <= 0)
         return;
     
@@ -168,6 +185,36 @@
     return image;
 }
 
+//- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+//
+//    if (object == self.audioPlayer && [keyPath isEqualToString:@"status"]) {
+//        if (self.audioPlayer.status == AVPlayerStatusFailed) {
+//            NSLog(@"AVPlayer Failed");
+//
+//        } else if (self.audioPlayer.status == AVPlayerStatusReadyToPlay) {
+//            NSLog(@"AVPlayerStatusReadyToPlay");
+//            [self.audioPlayer play];
+//
+//
+//        } else if (self.audioPlayer.status == AVPlayerItemStatusUnknown) {
+//            NSLog(@"AVPlayer Unknown");
+//
+//        }
+//    }
+//}
+
+-(void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
+    NSLog(@"FINISHED PLAYING");
+    
+    self.isPlaying = !self.isPlaying;
+    [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+    self.audioPlayer = nil;
+}
+
+-(void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError *)error {
+    NSLog(@"DECODE");
+}
+
 -(void)createScrubber {
     if (_scrubberNode == nil) {
         __weak __typeof__(self) weakSelf = self;
@@ -182,12 +229,10 @@
             slider.minimumTrackTintColor = [UIColor colorWithRed:144/255.0f green:18/255.0f blue:254/255.0f alpha:1.0f];
             slider.maximumTrackTintColor = [UIColor whiteColor];
             
-            MXRMessengerSliderNode *thumbImage = [MXRMessengerSliderNode new];
+//            MXRMessengerSliderNode *thumbImage = [MXRMessengerSliderNode new];
+            UIImage *thumbImage = [self drawPlay];
             
             [slider setThumbImage:thumbImage forState:UIControlStateNormal];
-            
-            
-            
             [slider addTarget:strongSelf action:@selector(beginSeek) forControlEvents:UIControlEventTouchDown];
             [slider addTarget:strongSelf action:@selector(endSeek) forControlEvents:UIControlEventTouchUpInside|UIControlEventTouchUpOutside|UIControlEventTouchCancel];
             [slider addTarget:strongSelf action:@selector(seekTimeDidChange:) forControlEvents:UIControlEventValueChanged];
@@ -218,7 +263,7 @@
 
 -(void)seekToTime:(CGFloat)percentComplete {
     CGFloat seconds = ( CMTimeGetSeconds(_duration) * percentComplete ) / 100;
-    [self.audioPlayer seekToTime:CMTimeMakeWithSeconds(seconds, 10000)];
+//    [self.audioPlayer seekToTime:CMTimeMakeWithSeconds(seconds, 10000)];
     
     if (!_isSeeking) {
         [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
