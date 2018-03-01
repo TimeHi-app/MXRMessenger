@@ -234,32 +234,9 @@
 
 -(void)audioRecorderInit {
     NSLog(@"%s", __PRETTY_FUNCTION__);
-//    NSError *error;
-//
-//    self.inputPath = [self pathForAudio:@"m4a"];
-//    self.outputPath = [self pathForAudio:@"mp3"];
-//    NSFileManager *fileManager = [NSFileManager defaultManager];
-//    if ([fileManager fileExistsAtPath:self.inputPath])
-//        [fileManager removeItemAtPath:self.inputPath error:&error];
-//    if ([fileManager fileExistsAtPath:self.outputPath])
-//        [fileManager removeItemAtPath:self.outputPath error:&error];
-//
-//    NSLog(@"ERROR: %@", [error description]);
-//    NSLog(@"SAVE: %@", self.inputPath);
-//
-//    NSDictionary *settings = @{
-//                               AVFormatIDKey : @(kAudioFormatMPEG4AAC),
-//                               AVSampleRateKey : @(44100),
-//                               AVNumberOfChannelsKey : @(2)
-//                               };
-//
-//    audioRecorder = [[AVAudioRecorder alloc] initWithURL:[NSURL fileURLWithPath:self.inputPath] settings:settings error:&error];
-//    NSLog(@"ERROR: %@", [error description]);
-//    audioRecorder.meteringEnabled = YES;
-//
-//    [audioRecorder prepareToRecord];
+
     [self audioRecorderStart];
-//    [self installTap];
+
 }
 
 -(void)audioRecorderStart {
@@ -278,115 +255,26 @@
     [self audioRecorderUpdate];
 }
 
--(void)prepareLame {
-    
-    double sampleRate = [self.engine.inputNode inputFormatForBus:0].sampleRate;
-    
-    self.lame = lame_init();
-    lame_set_in_samplerate(_lame, sampleRate / 2);
-    lame_set_VBR(_lame, vbr_default);
-    lame_set_out_samplerate(_lame, 0);
-    lame_set_quality(_lame, 4);
-    lame_init_params(_lame);
-}
-
--(void)installTap {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    NSError *error;
-    if (!self.engine)
-        self.engine = [[AVAudioEngine alloc] init];
-    AVAudioInputNode *input = self.engine.inputNode;
-    AVAudioFormat *format = [input inputFormatForBus:0];
-    [input installTapOnBus:0 bufferSize:4096 format:format block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
-        if (buffer.floatChannelData[0]) {
-            int32_t frameLenght = buffer.frameLength / 2;
-            int bytesWritten = lame_encode_buffer_interleaved_ieee_float(self.lame, buffer.floatChannelData[0], frameLenght, mp3, 4096);
-            
-            [self.file appendBytes:mp3 length:bytesWritten];
-        }
-    }];
-    
-    [self.engine prepare];
-    [self.engine startAndReturnError:&error];
-    dateAudioStart = [NSDate date];
-    timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
-}
-
--(void)removeTap {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    [self.engine.inputNode removeTapOnBus:0];
-    [self.engine stop];
-    self.engine = nil;
-    NSError *error;
-    
-//    NSURL *url = [[NSFileManager defaultManager] URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:&error];
-//    [url URLByAppendingPathComponent:@"audio.mp3"];
-    
-    NSString* saveFileName = [NSString stringWithFormat:@"%f_audio.mp3",[[NSDate date] timeIntervalSince1970]];
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *path = [documentsDirectory stringByAppendingPathComponent:saveFileName];
-    
-//    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-//    NSString *folderPath = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"audio.mp3"];
-    NSString *pathURL = [NSString stringWithFormat:@"file://%@", path];
-    
-    [self.file writeToURL:[NSURL URLWithString:pathURL] options:NSDataWritingAtomic error:&error];
-    NSLog(@"%@", error);
-    
-    NSURL *url = [[NSURL alloc] initFileURLWithPath:path];
-    
-    if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)])
-        [self.toolBarDelegate didRecordMP3Audio:url];
-}
-
 -(void)audioRecorderStop:(BOOL)sending {
     NSLog(@"%s", __PRETTY_FUNCTION__);
-    NSLog(@"%f", [[NSDate date] timeIntervalSinceDate:dateAudioStart]);
-//    [self removeTap];
-
-    NSLog(@"END RECORDING");
-    [_audioRecorder stop];
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-    [audioSession setActive:NO error:nil];
     
-    if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)])
-        [self.toolBarDelegate didRecordMP3Audio:[NSURL URLWithString:self.inputPath]];
-//
-//    NSFileManager *fileManager = [NSFileManager defaultManager];
-//    if ([fileManager fileExistsAtPath:self.inputPath])
-//        NSLog(@"RETRIVE: %@", self.inputPath);
-//
-//    ExtAudioConverter* converter = [[ExtAudioConverter alloc] init];
-//    converter.inputFile = self.inputPath;
-//    converter.outputFile = self.outputPath;
-//
-//    converter.outputSampleRate = 44100;
-//    converter.outputNumberChannels = 2;
-//    converter.outputBitDepth = BitDepth_16;
-//    converter.outputFormatID = kAudioFormatMPEGLayer3;
-//    converter.outputFileType = kAudioFileMP3Type;
-//    if ([converter convert]) {
-//        if ([fileManager fileExistsAtPath:self.outputPath]) {
-//            NSLog(@"CONVERTED: %@", self.outputPath);
-//            AVPlayerItem *item = [AVPlayerItem playerItemWithURL:[NSURL URLWithString:self.outputPath]];
-//
-//
-//            if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)]) {
-//                [self.toolBarDelegate didRecordMP3Audio:item];
-//            }
-//        }
-//    } else {
-//        NSLog(@"Converted fail");
-//    }
-//
-    [timerAudio invalidate];
-    timerAudio = nil;
 
     if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
-
+        NSLog(@"%f", [[NSDate date] timeIntervalSinceDate:dateAudioStart]);
+        
+        NSLog(@"END RECORDING");
+        [_audioRecorder stop];
+        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+        [audioSession setActive:NO error:nil];
+        
+        if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)])
+            [self.toolBarDelegate didRecordMP3Audio:[NSURL URLWithString:self.inputPath]];
+        
+        [timerAudio invalidate];
+        timerAudio = nil;
     } else {
+        NSLog(@"DELETE RECORDING");
+        [_audioRecorder stop];
         [_audioRecorder deleteRecording];
     }
 }
