@@ -16,14 +16,13 @@
 @interface MXRMessageAudioNode () <AVAudioPlayerDelegate>
 
 @property (strong, nonatomic) AVAudioPlayer *audioPlayer;
-@property (strong, nonatomic) AVPlayerItem *item;
 @property (assign, nonatomic) CMTime duration;
-@property (assign, nonatomic) BOOL isSeeking;
 @property (assign, nonatomic) BOOL isPlaying;
 @property (strong, nonatomic) MXRMessengerPlayButtonNode *playButton;
 @property (strong, nonatomic) MXRMessengerPauseButtonNode *pauseButton;
 @property (strong, nonatomic) UIImage *playImage;
 @property (strong, nonatomic) UIImage *pauseImage;
+@property (strong, nonatomic) NSTimer *scrubberTime;
 
 @end
 
@@ -34,6 +33,8 @@
 
 -(instancetype)initWithAudioURL:(NSURL *)audioURL duration:(NSUInteger)duration configuration:(MXRMessageAudioConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornerHavingRadius {
     if (self = [super initWithConfiguration:configuration]) {
+        ASDisplayNodeAssert(duration > 0, @"Audio must have duration");
+        
         self.automaticallyManagesSubnodes = YES;
         _configuration = configuration;
         self.userInteractionEnabled = YES;
@@ -41,7 +42,7 @@
         _audioURL = audioURL;
         _playImage = configuration.playButtonNode;
         _pauseImage = configuration.pauseButtonNode;
-        _duration = CMTimeMake(duration, 10000);
+        _duration = CMTimeMake(duration, 1);
         
         [self createDurationTextField];
         [self createPlayButtonNode];
@@ -65,31 +66,13 @@
     return [self initWithAudioURL:nil duration:0 configuration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners];
 }
 
--(AVPlayerItem *)item {
-    if (!_item) {
-//            NSString *strng = [self.audioURL.absoluteString substringFromIndex:7];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:self.audioURL.absoluteString]) {
-            AVAsset *asset = [AVURLAsset URLAssetWithURL:self.audioURL options:nil];
-            _item = [[AVPlayerItem alloc] initWithAsset:asset];
-        }
-    }
-    return _item;
-}
-
 -(void)createDurationTextField {
     if (_durationTextNode == nil) {
         _durationTextNode = [ASTextNode new];
         
-        NSDictionary *options = @{
-                                  NSFontAttributeName : [UIFont systemFontOfSize:12.0],
-                                  NSForegroundColorAttributeName: [UIColor blackColor]
-                                  };
-        NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:[self timeStringForCMTime:self.item.asset.duration] attributes:options];
-        
-        _durationTextNode.attributedText = attributedString;
+        _durationTextNode.attributedText = [self setAttributedString:self.duration];
         _durationTextNode.truncationMode = NSLineBreakByClipping;
     }
-//        [self addSubnode:_durationTextNode];
 }
 
 -(void)createPlayButtonNode {
@@ -99,8 +82,7 @@
         _playButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
         
     }
-    [_playButton addTarget:self action:@selector(didTapPlayButton) forControlEvents:ASControlNodeEventTouchUpInside];
-    //    [self addSubnode:_playButton];
+    [_playButton addTarget:self action:@selector(didTapPlayButton:) forControlEvents:ASControlNodeEventTouchUpInside];
 }
 
 -(void)createPauseButtonNode {
@@ -109,15 +91,13 @@
         _pauseButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
         [_pauseButton setImage:_pauseImage forState:UIControlStateNormal];
     }
-    [_pauseButton addTarget:self action:@selector(didTapPlayButton) forControlEvents:ASControlNodeEventTouchUpInside];
-    //    [self addSubnode:_pauseButton];
+    [_pauseButton addTarget:self action:@selector(didTapPlayButton:) forControlEvents:ASControlNodeEventTouchUpInside];
 }
 
--(void)didTapPlayButton {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+-(void)didTapPlayButton:(NSNotification *)notification {
     NSError *error;
     self.isPlaying = !self.isPlaying;
-    [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+    [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
     
     if (!self.audioPlayer) {
         
@@ -126,45 +106,23 @@
         NSLog(@"%@", error);
         self.audioPlayer.delegate = self;
         [self.audioPlayer prepareToPlay];
-//        [[NSNotificationCenter defaultCenter] addObserver:self
-//                                                 selector:@selector(playerItemDidReachEnd:)
-//                                                     name:AVPlayerItemDidPlayToEndTimeNotification
-//                                                   object:[self.audioPlayer currentItem]];
-//        [[NSNotificationCenter defaultCenter] addObserver:self
-//                                                 selector:@selector(playerItemDidReachEnd:)
-//                                                     name:AVPlayerItemFailedToPlayToEndTimeNotification
-//                                                   object:[self.audioPlayer currentItem]];
-//        [self.audioPlayer addObserver:self forKeyPath:@"status" options:0 context:nil];
-        
-//        __weak __typeof(self) weakSelf = self;
-//        [self.audioPlayer addPeriodicTimeObserverForInterval:CMTimeMake(1, 10000) queue:NULL usingBlock:^(CMTime time) {
-//            [weakSelf periodicTimeObserver:time];
-//        }];
-        if (self.audioPlayer.isPlaying) {
-            [self.audioPlayer stop];
-        } else {
-            [self.audioPlayer play];
-        }
-        
+    }
+    
+    if (self.audioPlayer.isPlaying) {
+        [self.scrubberTime invalidate];
+        [self.audioPlayer stop];
+    } else {
+        self.scrubberTime = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateSlider:) userInfo:nil repeats:YES];
+        [self.audioPlayer play];
     }
 }
 
--(void)periodicTimeObserver:(CMTime)time {
-    NSTimeInterval timeInSeconds = CMTimeGetSeconds(time);
-    NSLog(@"TIME: %f", timeInSeconds);
-    if (timeInSeconds <= 0)
-        return;
-    
-    [self didPlayToTimeInterval:timeInSeconds];
-}
+-(void)updateSlider:(UISlider *)sender {
 
--(void)didPlayToTimeInterval:(NSTimeInterval)seconds {
-    
-    if (_isSeeking)
-        return;
-    
-    if (_scrubberNode)
-        [(UISlider*)_scrubberNode.view setValue:( seconds / CMTimeGetSeconds(_duration) ) animated:NO];
+    NSLog(@"CURRENT TIME: %f", self.audioPlayer.currentTime);
+    [(UISlider *)self.scrubberNode.view setValue:self.audioPlayer.currentTime];
+
+    self.durationTextNode.attributedText = [self setAttributedString:CMTimeMake(self.audioPlayer.currentTime, 1)];
 }
 
 -(UIImage *)drawPlay {
@@ -185,93 +143,54 @@
     return image;
 }
 
-//- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-//
-//    if (object == self.audioPlayer && [keyPath isEqualToString:@"status"]) {
-//        if (self.audioPlayer.status == AVPlayerStatusFailed) {
-//            NSLog(@"AVPlayer Failed");
-//
-//        } else if (self.audioPlayer.status == AVPlayerStatusReadyToPlay) {
-//            NSLog(@"AVPlayerStatusReadyToPlay");
-//            [self.audioPlayer play];
-//
-//
-//        } else if (self.audioPlayer.status == AVPlayerItemStatusUnknown) {
-//            NSLog(@"AVPlayer Unknown");
-//
-//        }
-//    }
-//}
-
 -(void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
     NSLog(@"FINISHED PLAYING");
-    
     self.isPlaying = !self.isPlaying;
+    [(UISlider *)self.scrubberNode.view setValue:0];
+    _durationTextNode.attributedText = [self setAttributedString:self.duration];
     [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
     self.audioPlayer = nil;
+    [self.scrubberTime invalidate];
 }
 
 -(void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError *)error {
     NSLog(@"DECODE");
 }
 
+-(NSAttributedString *)setAttributedString:(CMTime)time {
+    NSDictionary *options = @{
+                              NSFontAttributeName : [UIFont systemFontOfSize:12.0],
+                              NSForegroundColorAttributeName: [UIColor blackColor]
+                              };
+    
+    
+    NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:[self timeStringForCMTime:time] attributes:options];
+    
+    return attributedString;
+}
+
 -(void)createScrubber {
     if (_scrubberNode == nil) {
-        __weak __typeof__(self) weakSelf = self;
         _scrubberNode = [[ASDisplayNode alloc] initWithViewBlock:^UIView * _Nonnull{
-            __typeof__(self) strongSelf = weakSelf;
             
             UISlider *slider = [[UISlider alloc] initWithFrame:CGRectZero];
             slider.minimumValue = 0.0;
-            slider.maximumValue = 1.0;
+            slider.maximumValue = CMTimeGetSeconds(_duration);
             
             slider.tintColor = [UIColor colorWithRed:144/255.0f green:18/255.0f blue:254/255.0f alpha:1.0f];
             slider.minimumTrackTintColor = [UIColor colorWithRed:144/255.0f green:18/255.0f blue:254/255.0f alpha:1.0f];
             slider.maximumTrackTintColor = [UIColor whiteColor];
             
-//            MXRMessengerSliderNode *thumbImage = [MXRMessengerSliderNode new];
             UIImage *thumbImage = [self drawPlay];
             
             [slider setThumbImage:thumbImage forState:UIControlStateNormal];
-            [slider addTarget:strongSelf action:@selector(beginSeek) forControlEvents:UIControlEventTouchDown];
-            [slider addTarget:strongSelf action:@selector(endSeek) forControlEvents:UIControlEventTouchUpInside|UIControlEventTouchUpOutside|UIControlEventTouchCancel];
-            [slider addTarget:strongSelf action:@selector(seekTimeDidChange:) forControlEvents:UIControlEventValueChanged];
-            
+
             return slider;
         }];
         
         _scrubberNode.style.flexShrink = 1;
     }
     [self addSubnode:_scrubberNode];
-}
-
-- (void)beginSeek
-{
-    _isSeeking = YES;
-}
-
-- (void)endSeek
-{
-    _isSeeking = NO;
-}
-
-- (void)seekTimeDidChange:(UISlider*)slider
-{
-    CGFloat percentage = slider.value * 100;
-    [self seekToTime:percentage];
-}
-
--(void)seekToTime:(CGFloat)percentComplete {
-    CGFloat seconds = ( CMTimeGetSeconds(_duration) * percentComplete ) / 100;
-//    [self.audioPlayer seekToTime:CMTimeMakeWithSeconds(seconds, 10000)];
-    
-    if (!_isSeeking) {
-        [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
-    }
-}
-
--(void)togglePlayPause {
-    [self didTapPlayButton];
 }
 
 -(ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
@@ -396,26 +315,6 @@
 @implementation MXRMessengerPauseButtonNode
 @end
 
-@implementation MXRMessengerSliderNode
--(void)drawInRect:(CGRect)rect {
-    CGRect rect2 = CGRectMake(0.0, 0.0, 15.0, 15.0);
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    UIGraphicsPushContext(context);
-    UIGraphicsBeginImageContextWithOptions(rect2.size, NO, [UIScreen mainScreen].scale);
-    UIColor* color0 = [UIColor colorWithRed: 0.245 green: 0.289 blue: 0.998 alpha: 1];
-    
-    UIBezierPath* oval5CopyPath = [UIBezierPath bezierPathWithOvalInRect: CGRectMake(0, 0, 15, 15)];
-    [color0 setFill];
-    [oval5CopyPath fill];
-    
-    CGContextAddPath(context, oval5CopyPath.CGPath);
-//    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    CGContextSaveGState(context);
-    UIGraphicsPopContext();
-    UIGraphicsEndImageContext();
-}
-@end
-
 @implementation MXRMessengerAudioIconButtonNode
 
 - (instancetype)init {
@@ -436,10 +335,8 @@
     icon.displaysAsynchronously = NO; // otherwise it doesnt appear until viewDidAppear
     button.displaysAsynchronously = NO;
     icon.color = audioNode.tintColor;
-    //    CGFloat iconWidth = ceilf(audioNode.font.lineHeight) + 2.0f;
-    //    icon.style.preferredSize = CGSizeMake(iconWidth, iconWidth + 5);
-    //    button.style.preferredSize = CGSizeMake(iconWidth + 22.0f, audioNode.heightOfTextNodeWithOneLineOfText);
     button.hitTestSlop = UIEdgeInsetsMake(-4.0f, 0, -10.0f, 0.0f);
+    
     return button;
 }
 

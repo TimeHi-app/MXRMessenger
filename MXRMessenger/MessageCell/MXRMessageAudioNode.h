@@ -10,6 +10,8 @@
 #import "MXRMessageNodeConfiguration.h"
 #import "MXRMessageContentNode.h"
 
+#define IS_AUDIO_PLAYING @"kIsAudioPlaying"
+
 @class MXRMessageAudioConfiguration, MXRMessengerPlayButtonNode, MXRMessengerPauseButtonNode, MXRMessengerButtonContainerNode;
 
 @interface MXRMessageAudioNode : MXRMessageContentNode
@@ -43,9 +45,6 @@
 @end
 
 @interface MXRMessengerPauseButtonNode : MXRMessengerAudioIconNode
-@end
-
-@interface MXRMessengerSliderNode : UIImage
 @end
 
 @interface MXRMessengerAudioIconButtonNode : ASControlNode

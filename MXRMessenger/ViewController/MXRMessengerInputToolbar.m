@@ -16,10 +16,6 @@
 @interface MXRMessengerInputToolbar () <MXRMessengerIconButtonDelegate, AVAudioPlayerDelegate, MXRMessengerInputToolBarDelegate>
 
 @property (strong, nonatomic) NSString *inputPath;
-@property (strong, nonatomic) NSString *outputPath;
-@property (assign, nonatomic) lame_t lame;
-@property (strong, nonatomic) AVAudioEngine *engine;
-@property (strong, nonatomic) NSMutableData *file;
 
 @end
 
@@ -52,10 +48,6 @@
         _font = font;
         _tintColor = tintColor;
         
-//        self.engine = [AVAudioEngine new];
-//        self.file = [NSMutableData new];
-        
-//        [self prepareLame];
         // #8899a6 alpha 0.85
         UIColor* placeholderGray = [UIColor colorWithRed:0.53 green:0.60 blue:0.65 alpha:0.85];
         // #f5f8fa
@@ -77,6 +69,7 @@
         
         _textInputNode = [[MXRGrowingEditableTextNode alloc] init];
         _textInputNode.delegate = self;
+        _textInputNode.enablesReturnKeyAutomatically = YES;
         
         _textInputNode.tintColor = tintColor;
         _textInputNode.maximumLinesToDisplay = 6;
@@ -104,12 +97,14 @@
 
 -(void)touchDidBegin:(UITouch *)touch {
     if (isTyping) {
-        if ([self.toolBarDelegate respondsToSelector:@selector(didTapSendButton)])
+        if ([self.toolBarDelegate respondsToSelector:@selector(didTapSendButton)]) {
+            isTyping = NO;
+            [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
             [self.toolBarDelegate didTapSendButton];
+        }
     } else {
         pointAudioStart = [touch locationInView:self.view];
         [self audioRecorderInit];
-        //        [self audioRecorderStart];
     }
 }
 
@@ -165,13 +160,21 @@
 }
 
 -(void)editableTextNodeDidUpdateText:(ASEditableTextNode *)editableTextNode {
-    if (_textInputNode.textView.text.length == 1) {
-        isTyping = YES;
-        [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
-    } else if (_textInputNode.textView.text.length == 0) {
+    if  (_textInputNode.textView.text.length == 0) {
         isTyping = NO;
         [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
     }
+}
+
+-(BOOL)editableTextNode:(ASEditableTextNode *)editableTextNode shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
+    
+    if (text.length > 0) {
+        isTyping = YES;
+        [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+    }
+    
+    
+    return YES;
 }
 
 - (NSString*)clearText {
@@ -179,31 +182,6 @@
     _textInputNode.attributedText = [[NSAttributedString alloc] initWithString:@"" attributes:_textInputNode.typingAttributes];
     return text;
 }
-
-//-(void)audioRecorderGesture:(UILongPressGestureRecognizer *)gestureRecognizer {
-//    switch (gestureRecognizer.state) {
-//        case UIGestureRecognizerStateBegan: {
-//            pointAudioStart = [gestureRecognizer locationInView:self.view];
-//            [self audioRecorderInit];
-////            [self audioRecorderStart];
-//            break;
-//        }
-//        case UIGestureRecognizerStateChanged: {
-//            break;
-//        }
-//        case UIGestureRecognizerStateEnded: {
-//            CGPoint pointAudioStop = [gestureRecognizer locationInView:self.view];
-//            CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
-//            [self audioRecorderStop:(distanceAudio < 50)];
-//            break;
-//        }
-//        case UIGestureRecognizerStatePossible:
-//        case UIGestureRecognizerStateCancelled:
-//        case UIGestureRecognizerStateFailed:
-//            break;
-//    }
-//}
-
 
 -(NSString *)pathForAudio:(NSString *)extension{
     int r = arc4random_uniform(5000);
@@ -234,9 +212,9 @@
 
 -(void)audioRecorderInit {
     NSLog(@"%s", __PRETTY_FUNCTION__);
-
+    
     [self audioRecorderStart];
-
+    
 }
 
 -(void)audioRecorderStart {
@@ -258,7 +236,7 @@
 -(void)audioRecorderStop:(BOOL)sending {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
-
+    
     if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
         NSLog(@"%f", [[NSDate date] timeIntervalSinceDate:dateAudioStart]);
         
@@ -284,7 +262,7 @@
     int millisec = (int) (interval * 100) % 100;
     int seconds = (int) interval % 60;
     int minutes = (int) interval / 60;
-//    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
+    //    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
 }
 
 @end

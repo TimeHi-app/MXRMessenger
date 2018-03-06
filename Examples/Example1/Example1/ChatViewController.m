@@ -165,7 +165,7 @@
 //    } else {
 //        return [self.cellFactory cellNodeBlockWithSystem:message.text tableNode:tableNode row:indexPath.row];
     
-//    [NSURL URLWithString:@"http://devimages.apple.com/iphone/samples/bipbop/gear3/prog_index.m3u8"]
+//    NSURL *testURL = [NSURL URLWithString:@"http://devimages.apple.com/iphone/samples/bipbop/gear3/prog_index.m3u8"];
             MessageMedium* medium = message.media.firstObject;
     return [self.cellFactory cellNodeBlockWithAudio:medium.audioURL duration:10 tableNode:tableNode row:indexPath.row];
 //    }
