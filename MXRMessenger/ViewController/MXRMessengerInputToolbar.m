@@ -60,8 +60,6 @@
         _heightOfTextNodeWithOneLineOfText = heightOfTextNode;
         CGFloat cornerRadius = floorf(heightOfTextNode / 2.0f);
         
-//        isRecording = YES;
-        
         [self setupAudioRecorder];
         [self createCancelSliderNode];
         [self createDurationTextNode];
@@ -109,7 +107,7 @@
         }
     } else {
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
-        
+        _rightButtonsNode.backgroundColor = [UIColor blueColor];
         pointAudioStart = [touch locationInView:self.view];
         [self audioRecorderInit];
     }
@@ -117,12 +115,23 @@
 
 -(void)touchDidMove:(UITouch *)touch {
     if (!isTyping) {
+        CGPoint point = _rightButtonsNode.view.center;
+        point.x = [touch locationInView:self.view].x;
         
+        CGPoint point2 = _sliderNode.view.center;
+        point2.x = [touch locationInView:self.view].x - (_sliderNode.view.frame.size.width / 2) - _rightButtonsNode.view.frame.size.width;
+        
+        _rightButtonsNode.view.center = point;
+        _sliderNode.view.center = point2;
+        _sliderNode.zPosition = - 1;
     }
 }
 
 -(void)touchDidEnd:(UITouch *)touch {
     if (!isTyping) {
+        if (![_rightButtonsNode.backgroundColor isEqual:[UIColor whiteColor]]) {
+            _rightButtonsNode.backgroundColor = [UIColor whiteColor];
+        }
         CGPoint pointAudioStop = [touch locationInView:self.view];
         CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
         [self audioRecorderStop:(distanceAudio < 50)];
@@ -142,7 +151,6 @@
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
     ASStackLayoutSpec* inputBar = [ASStackLayoutSpec horizontalStackLayoutSpec];
     inputBar.alignItems = ASStackLayoutAlignItemsEnd;
-//    inputBar.justifyContent = ASStackLayoutJustifyContentCenter;
     NSMutableArray* inputBarChildren = [[NSMutableArray alloc] init];
     
     if (isRecording) {
@@ -153,13 +161,9 @@
         [inputBarChildren addObject:layoutSpec];
         
         ASInsetLayoutSpec *slideInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(_textInputInsets.top, 0, _textInputInsets.bottom, 0) child:_sliderNode];
-
         
         slideInset.style.flexGrow = 1.0f;
         slideInset.style.flexShrink = 1.0f;
-        
-//        slideInset.style.spacingBefore = [UIScreen mainScreen].bounds.size.width / 2 - 102;
-//        slideInset.style.spacingAfter =  [UIScreen mainScreen].bounds.size.width / 2;
         
         [inputBarChildren addObject:slideInset];
         [inputBarChildren addObject:_rightButtonsNode];
@@ -323,7 +327,8 @@
         _recordingNode.style.preferredSize = CGSizeMake(44.0f, 30.0f);
         _recordingNode.displaysAsynchronously = NO;
         _recordingNode.contentMode = UIViewContentModeScaleAspectFit;
-//        _recordingNode.backgroundColor = [UIColor greenColor];
+        _recordingNode.opaque = YES;
+        _recordingNode.backgroundColor = [UIColor whiteColor];
     }
 }
 
@@ -332,7 +337,8 @@
         _recDurationNode = [ASTextNode new];
         _recDurationNode.attributedText = [self durationTimerText:@"00:00"];
         _recDurationNode.displaysAsynchronously = NO;
-//        _recDurationNode.backgroundColor = [UIColor blueColor];
+        _recDurationNode.opaque = YES;
+        _recDurationNode.backgroundColor = [UIColor whiteColor];
     }
 }
 
@@ -341,7 +347,6 @@
         _sliderNode = [ASTextNode new];
         _sliderNode.attributedText = [self textForSliderNode];
         _sliderNode.displaysAsynchronously = NO;
-//        _sliderNode.backgroundColor = [UIColor redColor];
     }
 }
 
