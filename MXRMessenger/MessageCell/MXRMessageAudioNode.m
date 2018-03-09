@@ -125,7 +125,7 @@
     self.durationTextNode.attributedText = [self setAttributedString:CMTimeMake(self.audioPlayer.currentTime, 1)];
 }
 
--(UIImage *)drawPlay {
+-(UIImage *)drawThumbImage {
     CGRect rect = CGRectMake(0.0, 0.0, 15.0, 15.0);
     CGContextRef context = UIGraphicsGetCurrentContext();
     UIGraphicsPushContext(context);
@@ -181,7 +181,7 @@
             slider.minimumTrackTintColor = [UIColor colorWithRed:144/255.0f green:18/255.0f blue:254/255.0f alpha:1.0f];
             slider.maximumTrackTintColor = [UIColor whiteColor];
             
-            UIImage *thumbImage = [self drawPlay];
+            UIImage *thumbImage = [self drawThumbImage];
             
             [slider setThumbImage:thumbImage forState:UIControlStateNormal];
 
@@ -223,7 +223,8 @@
     
     ASStackLayoutSpec *progressSpec = [ASStackLayoutSpec stackLayoutSpecWithDirection:ASStackLayoutDirectionVertical
                                                                               spacing:5.0f
-                                                                       justifyContent:ASStackLayoutJustifyContentEnd alignItems:ASStackLayoutAlignItemsStart
+                                                                       justifyContent:ASStackLayoutJustifyContentEnd
+                                                                           alignItems:ASStackLayoutAlignItemsStart
                                                                              children:@[_scrubberNode, _durationTextNode]];
     
     progressSpec.style.alignSelf = ASStackLayoutAlignSelfStretch;
@@ -242,7 +243,10 @@
 }
 
 - (void)redrawBubbleImageWithColor:(UIColor*)color {
-    _backgroundImageNode.image = [UIImage mxr_bubbleImageWithMaximumCornerRadius:_configuration.maxCornerRadius minimumCornerRadius:_configuration.minCornerRadius color:color cornersToApplyMaxRadius:_cornersHavingRadius];
+    _backgroundImageNode.image = [UIImage mxr_bubbleImageWithMaximumCornerRadius:_configuration.maxCornerRadius
+                                                             minimumCornerRadius:_configuration.minCornerRadius
+                                                                           color:color
+                                                         cornersToApplyMaxRadius:_cornersHavingRadius];
 }
 
 - (void)redrawBubbleWithCorners:(UIRectCorner)cornersHavingRadius {

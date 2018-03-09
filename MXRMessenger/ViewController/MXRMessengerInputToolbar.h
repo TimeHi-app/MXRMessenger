@@ -11,7 +11,7 @@
 #import <MXRMessenger/MXRGrowingEditableTextNode.h>
 #import <MXRMessenger/MXRMessengerInputToolBarDelegate.h>
 
-@class MXRMessengerIconButtonNode;
+@class MXRMessengerIconButtonNode, MXRMessengerRecordingNode;
 
 @interface MXRMessengerInputToolbar : ASDisplayNode <ASEditableTextNodeDelegate>
 
@@ -22,6 +22,10 @@
 @property (nonatomic, strong) ASDisplayNode* rightButtonsNode;
 @property (nonatomic, strong, readonly) MXRMessengerIconButtonNode* defaultSendButton; // setting rightButtonsNode hides this
 @property (nonatomic, strong, readonly) MXRMessengerIconButtonNode* audioInputButton;
+@property (nonatomic, strong, readonly) ASImageNode* recordingNode;
+@property (nonatomic, strong, readonly) ASTextNode* recDurationNode;
+@property (nonatomic, strong, readonly) ASDisplayNode* recContainerNode;
+@property (nonatomic, strong, readonly) ASTextNode* sliderNode;
 
 @property (nonatomic, assign, readonly) CGFloat heightOfTextNodeWithOneLineOfText;
 @property (nonatomic, strong, readonly) UIFont* font;

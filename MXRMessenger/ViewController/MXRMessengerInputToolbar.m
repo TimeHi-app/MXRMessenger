@@ -9,6 +9,7 @@
 #import <MXRMessenger/MXRMessengerInputToolbar.h>
 
 #import <MXRMessenger/UIColor+MXRMessenger.h>
+#import <AudioToolbox/AudioToolbox.h>
 #import <MXRmessenger/ExtAudioConverter.h>
 
 @import lame;
@@ -30,8 +31,8 @@
     NSDate *dateAudioStart;
     
     BOOL isTyping;
+    BOOL isRecording;
     
-    unsigned char mp3[4096];
 }
 
 - (instancetype)init {
@@ -59,7 +60,12 @@
         _heightOfTextNodeWithOneLineOfText = heightOfTextNode;
         CGFloat cornerRadius = floorf(heightOfTextNode / 2.0f);
         
+//        isRecording = YES;
+        
         [self setupAudioRecorder];
+        [self createCancelSliderNode];
+        [self createDurationTextNode];
+        [self createRecordingImageNode];
         
         _textInputInsets = UIEdgeInsetsMake(topPadding, 0.7f*cornerRadius, bottomPadding, 0.7f*cornerRadius);
         
@@ -82,7 +88,6 @@
         self.toolBarDelegate = self;
         
         _defaultSendButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerSendIconNode alloc] init] matchingToolbar:self];
-        //        _rightButtonsNode = _defaultSendButton;
         _defaultSendButton.delegate = self;
         
         _audioInputButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerMicIconNode alloc] init] matchingToolbar:self];
@@ -103,6 +108,8 @@
             [self.toolBarDelegate didTapSendButton];
         }
     } else {
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+        
         pointAudioStart = [touch locationInView:self.view];
         [self audioRecorderInit];
     }
@@ -122,10 +129,6 @@
     }
 }
 
--(void)touchDidCancel:(UITouch *)touch {
-    //send message
-}
-
 -(void)setDelegate:(id<ASEditableTextNodeDelegate>)delegate {
     _textInputNode.delegate = delegate;
 }
@@ -139,21 +142,47 @@
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
     ASStackLayoutSpec* inputBar = [ASStackLayoutSpec horizontalStackLayoutSpec];
     inputBar.alignItems = ASStackLayoutAlignItemsEnd;
+//    inputBar.justifyContent = ASStackLayoutJustifyContentCenter;
     NSMutableArray* inputBarChildren = [[NSMutableArray alloc] init];
-    if (_leftButtonsNode) [inputBarChildren addObject:_leftButtonsNode];
     
-    _rightButtonsNode = isTyping ? _defaultSendButton : _audioInputButton;
-    
-    ASInsetLayoutSpec* textInputInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:_textInputInsets child:_textInputNode];
-    ASBackgroundLayoutSpec* textInputWithBackground = [ASBackgroundLayoutSpec backgroundLayoutSpecWithChild:textInputInset background:_textInputBackgroundNode];
-    textInputWithBackground.style.flexGrow = 1.0f;
-    textInputWithBackground.style.flexShrink = 1.0f;
-    if (!_leftButtonsNode) textInputWithBackground.style.spacingBefore = 8.0f;
-    if (!_rightButtonsNode) textInputWithBackground.style.spacingAfter = 8.0f;
-    [inputBarChildren addObject:textInputWithBackground];
-    
-    if (_rightButtonsNode) [inputBarChildren addObject:_rightButtonsNode];
-    inputBar.children = inputBarChildren;
+    if (isRecording) {
+        
+        ASLayoutSpec *layoutSpec = [self defaultLayoutSpec];
+        _rightButtonsNode = _audioInputButton;
+        
+        [inputBarChildren addObject:layoutSpec];
+        
+        ASInsetLayoutSpec *slideInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(_textInputInsets.top, 0, _textInputInsets.bottom, 0) child:_sliderNode];
+
+        
+        slideInset.style.flexGrow = 1.0f;
+        slideInset.style.flexShrink = 1.0f;
+        
+//        slideInset.style.spacingBefore = [UIScreen mainScreen].bounds.size.width / 2 - 102;
+//        slideInset.style.spacingAfter =  [UIScreen mainScreen].bounds.size.width / 2;
+        
+        [inputBarChildren addObject:slideInset];
+        [inputBarChildren addObject:_rightButtonsNode];
+        
+        inputBar.children = inputBarChildren;
+        
+    } else {
+        
+        if (_leftButtonsNode) [inputBarChildren addObject:_leftButtonsNode];
+        
+        _rightButtonsNode = isTyping ? _defaultSendButton : _audioInputButton;
+        
+        ASInsetLayoutSpec* textInputInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:_textInputInsets child:_textInputNode];
+        ASBackgroundLayoutSpec* textInputWithBackground = [ASBackgroundLayoutSpec backgroundLayoutSpecWithChild:textInputInset background:_textInputBackgroundNode];
+        textInputWithBackground.style.flexGrow = 1.0f;
+        textInputWithBackground.style.flexShrink = 1.0f;
+        if (!_leftButtonsNode) textInputWithBackground.style.spacingBefore = 8.0f;
+        if (!_rightButtonsNode) textInputWithBackground.style.spacingAfter = 8.0f;
+        [inputBarChildren addObject:textInputWithBackground];
+        
+        if (_rightButtonsNode) [inputBarChildren addObject:_rightButtonsNode];
+        inputBar.children = inputBarChildren;
+    }
     
     ASInsetLayoutSpec* inputBarInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:_finalInsets child:inputBar];
     return inputBarInset;
@@ -173,7 +202,6 @@
         [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
     }
     
-    
     return YES;
 }
 
@@ -191,10 +219,10 @@
 }
 
 -(void)setupAudioRecorder {
-    AVAudioSession *session = [AVAudioSession sharedInstance];
-    [session setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
-    
     NSError *error;
+    
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    [session setCategory:AVAudioSessionCategoryPlayAndRecord error:&error];
     
     NSDictionary *settings = @{
                                AVFormatIDKey : @(kAudioFormatMPEG4AAC),
@@ -213,29 +241,34 @@
 -(void)audioRecorderInit {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     
-    [self audioRecorderStart];
-    
-}
-
--(void)audioRecorderStart {
     NSError *error;
-    
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setActive:YES error:&error];
     
+    isRecording = YES;
+    [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
+    
+    [self audioRecorderStart];
+}
+
+-(void)audioRecorderStart {
     [_audioRecorder record];
     
     dateAudioStart = [NSDate date];
     
-    timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
-    
-    [self audioRecorderUpdate];
+        timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
+        [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
+}
+
+-(void)audioRecorderUpdate {
+    self.recDurationNode.attributedText = [self durationTimerText:[self timeStringForCMTime:[[NSDate date] timeIntervalSinceDate:dateAudioStart]]];
 }
 
 -(void)audioRecorderStop:(BOOL)sending {
     NSLog(@"%s", __PRETTY_FUNCTION__);
+    isRecording = NO;
     
+    [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
     
     if ((sending) && ([[NSDate date] timeIntervalSinceDate:dateAudioStart] >= 1)) {
         NSLog(@"%f", [[NSDate date] timeIntervalSinceDate:dateAudioStart]);
@@ -250,23 +283,204 @@
         
         [timerAudio invalidate];
         timerAudio = nil;
+        self.recDurationNode.attributedText = [self durationTimerText:@"00:00"];
     } else {
         NSLog(@"DELETE RECORDING");
+        
         [_audioRecorder stop];
+        [timerAudio invalidate];
+        timerAudio = nil;
+        self.recDurationNode.attributedText = [self durationTimerText:@"00:00"];
         [_audioRecorder deleteRecording];
     }
 }
 
--(void)audioRecorderUpdate {
-    NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:dateAudioStart];
-    int millisec = (int) (interval * 100) % 100;
-    int seconds = (int) interval % 60;
-    int minutes = (int) interval / 60;
-    //    labelInputAudio.text = [NSString stringWithFormat:@"%01d:%02d,%02d", minutes, seconds, millisec];
+- (NSString *)timeStringForCMTime:(double)time {
+    if (!time) {
+        return @"00:00";
+    }
+    
+    NSUInteger dTotalSeconds = time;
+    
+    NSUInteger dHours = floor(dTotalSeconds / 3600);
+    NSUInteger dMinutes = floor(dTotalSeconds % 3600 / 60);
+    NSUInteger dSeconds = floor(dTotalSeconds % 3600 % 60);
+    
+    NSString *videoDurationText;
+    if (dHours > 0) {
+        videoDurationText = [NSString stringWithFormat:@"%i:%02i:%02i", (int)dHours, (int)dMinutes, (int)dSeconds];
+    } else {
+        videoDurationText = [NSString stringWithFormat:@"%02i:%02i", (int)dMinutes, (int)dSeconds];
+    }
+    return videoDurationText;
 }
 
-@end
+#pragma mark - RecordingButtonAndTimeSetup
+-(void)createRecordingImageNode {
+    if (!_recordingNode) {
+        _recordingNode = [[ASImageNode alloc] init];
+        _recordingNode.image = [self drawRecNode];
+        _recordingNode.style.preferredSize = CGSizeMake(44.0f, 30.0f);
+        _recordingNode.displaysAsynchronously = NO;
+        _recordingNode.contentMode = UIViewContentModeScaleAspectFit;
+//        _recordingNode.backgroundColor = [UIColor greenColor];
+    }
+}
 
+-(void)createDurationTextNode {
+    if (!_recDurationNode) {
+        _recDurationNode = [ASTextNode new];
+        _recDurationNode.attributedText = [self durationTimerText:@"00:00"];
+        _recDurationNode.displaysAsynchronously = NO;
+//        _recDurationNode.backgroundColor = [UIColor blueColor];
+    }
+}
+
+-(void)createCancelSliderNode {
+    if (!_sliderNode) {
+        _sliderNode = [ASTextNode new];
+        _sliderNode.attributedText = [self textForSliderNode];
+        _sliderNode.displaysAsynchronously = NO;
+//        _sliderNode.backgroundColor = [UIColor redColor];
+    }
+}
+
+-(ASLayoutSpec *)defaultLayoutSpec {
+    
+    ASStackLayoutSpec *recordingInset = [ASStackLayoutSpec stackLayoutSpecWithDirection:ASStackLayoutDirectionHorizontal spacing:0.0f justifyContent:ASStackLayoutJustifyContentEnd alignItems:ASStackLayoutAlignItemsCenter children:@[_recordingNode ,_recDurationNode]];
+    
+    return recordingInset;
+}
+
+//-(ASLayoutSpec *)cancelLayoutSpec:(ASSizeRange)constrainedSize {
+//
+//    ASLayoutSpec *layoutSpec = [self defaultLayoutSpec];
+//
+//    ASStackLayoutSpec *cancelInset = [ASStackLayoutSpec stackLayoutSpecWithDirection:ASStackLayoutDirectionHorizontal spacing:5.0f justifyContent:ASStackLayoutJustifyContentStart alignItems:ASStackLayoutAlignItemsCenter children:@[layoutSpec, _sliderNode]];
+//    _sliderNode.style.spacingAfter = 40.0f;
+//    _sliderNode.style.spacingBefore = 20.0f;
+//
+//    ASInsetLayoutSpec *insetLayout = [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(0, 0, 0, 0) child:cancelInset];
+//
+//    return insetLayout;
+//}
+
+-(NSAttributedString *)textForSliderNode {
+    NSAttributedString *string;
+    
+    NSMutableParagraphStyle *paragraph = [[NSMutableParagraphStyle alloc] init];
+    paragraph.alignment = NSTextAlignmentCenter;
+    
+    
+    if (@available(iOS 8.2, *)) {
+        NSDictionary *options = @{
+                                  NSForegroundColorAttributeName : [UIColor colorWithRed:146/255.0f green:146/255.0f blue:146/255.0f alpha:1.0f],
+                                  NSFontAttributeName : [UIFont systemFontOfSize:13.0f weight:UIFontWeightLight],
+                                  NSParagraphStyleAttributeName : paragraph
+                                  };
+        
+        string = [[NSAttributedString alloc] initWithString:@"Slide to cancel <" attributes:options];
+    } else {
+        // Fallback on earlier versions
+    }
+    
+    return string;
+}
+
+-(NSAttributedString *)durationTimerText:(NSString *)currentTime {
+    NSAttributedString *string;
+    
+    NSDictionary *options = @{
+                              NSForegroundColorAttributeName : [UIColor colorWithRed:41/255.0f green:28/255.0f blue:42/255.0f alpha:1.0f],
+                              NSFontAttributeName : [UIFont systemFontOfSize:18.0f]
+                              };
+    
+    string = [[NSAttributedString alloc] initWithString:currentTime attributes:options];
+    
+    return string;
+}
+
+-(UIImage *)drawRecNode {
+    CGRect rect = CGRectMake(0.0, 0.0, 44.0, 34.0);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    UIGraphicsPushContext(context);
+    UIGraphicsBeginImageContextWithOptions(rect.size, NO, [UIScreen mainScreen].scale);
+    //// Color Declarations
+    UIColor* fillColor = [UIColor colorWithRed: 0.882 green: 0.114 blue: 0.114 alpha: 1];
+    UIColor* fillColor2 = [UIColor colorWithRed: 251/255.0f green: 135/255.0f blue: 135/255.0f alpha: 1];
+    
+    //// Bezier Drawing
+    UIBezierPath* bezierPath2 = [UIBezierPath bezierPath];
+    [bezierPath2 moveToPoint: CGPointMake(21.25, 15.53)];
+    [bezierPath2 addCurveToPoint: CGPointMake(15.28, 7.76) controlPoint1: CGPointMake(17.95, 15.53) controlPoint2: CGPointMake(15.28, 12.05)];
+    [bezierPath2 addCurveToPoint: CGPointMake(21.25, 0) controlPoint1: CGPointMake(15.28, 3.48) controlPoint2: CGPointMake(17.95, 0)];
+    [bezierPath2 addCurveToPoint: CGPointMake(27.23, 7.76) controlPoint1: CGPointMake(24.55, 0) controlPoint2: CGPointMake(27.23, 3.48)];
+    [bezierPath2 addCurveToPoint: CGPointMake(21.25, 15.53) controlPoint1: CGPointMake(27.23, 12.05) controlPoint2: CGPointMake(24.55, 15.53)];
+    [bezierPath2 closePath];
+    bezierPath2.usesEvenOddFillRule = YES;
+    [fillColor setFill];
+    [bezierPath2 fill];
+    
+    UIBezierPath* bezierPath = [UIBezierPath bezierPath];
+    [bezierPath moveToPoint: CGPointMake(23.33, 32.04)];
+    [bezierPath addLineToPoint: CGPointMake(24.04, 32.04)];
+    [bezierPath addCurveToPoint: CGPointMake(21.68, 34) controlPoint1: CGPointMake(23.75, 33.25) controlPoint2: CGPointMake(22.87, 34)];
+    [bezierPath addCurveToPoint: CGPointMake(19.12, 30.17) controlPoint1: CGPointMake(20.11, 34) controlPoint2: CGPointMake(19.12, 32.51)];
+    [bezierPath addCurveToPoint: CGPointMake(21.67, 26.33) controlPoint1: CGPointMake(19.12, 27.84) controlPoint2: CGPointMake(20.12, 26.33)];
+    [bezierPath addCurveToPoint: CGPointMake(24.13, 30) controlPoint1: CGPointMake(23.19, 26.33) controlPoint2: CGPointMake(24.13, 27.74)];
+    [bezierPath addLineToPoint: CGPointMake(24.13, 30.4)];
+    [bezierPath addLineToPoint: CGPointMake(19.83, 30.4)];
+    [bezierPath addLineToPoint: CGPointMake(19.83, 30.44)];
+    [bezierPath addCurveToPoint: CGPointMake(21.69, 33.19) controlPoint1: CGPointMake(19.87, 32.12) controlPoint2: CGPointMake(20.59, 33.19)];
+    [bezierPath addCurveToPoint: CGPointMake(23.33, 32.04) controlPoint1: CGPointMake(22.5, 33.19) controlPoint2: CGPointMake(23.09, 32.77)];
+    [bezierPath closePath];
+    [bezierPath moveToPoint: CGPointMake(21.66, 27.13)];
+    [bezierPath addCurveToPoint: CGPointMake(19.84, 29.66) controlPoint1: CGPointMake(20.62, 27.13) controlPoint2: CGPointMake(19.9, 28.13)];
+    [bezierPath addLineToPoint: CGPointMake(23.4, 29.66)];
+    [bezierPath addCurveToPoint: CGPointMake(21.66, 27.13) controlPoint1: CGPointMake(23.38, 28.13) controlPoint2: CGPointMake(22.7, 27.13)];
+    [bezierPath closePath];
+    [bezierPath moveToPoint: CGPointMake(13.73, 29.8)];
+    [bezierPath addLineToPoint: CGPointMake(13.73, 33.88)];
+    [bezierPath addLineToPoint: CGPointMake(13, 33.88)];
+    [bezierPath addLineToPoint: CGPointMake(13, 23.93)];
+    [bezierPath addLineToPoint: CGPointMake(15.74, 23.93)];
+    [bezierPath addCurveToPoint: CGPointMake(18.19, 26.84) controlPoint1: CGPointMake(17.23, 23.93) controlPoint2: CGPointMake(18.19, 25.07)];
+    [bezierPath addCurveToPoint: CGPointMake(16.55, 29.65) controlPoint1: CGPointMake(18.19, 28.25) controlPoint2: CGPointMake(17.57, 29.3)];
+    [bezierPath addLineToPoint: CGPointMake(18.4, 33.88)];
+    [bezierPath addLineToPoint: CGPointMake(17.56, 33.88)];
+    [bezierPath addLineToPoint: CGPointMake(15.8, 29.8)];
+    [bezierPath addLineToPoint: CGPointMake(13.73, 29.8)];
+    [bezierPath closePath];
+    [bezierPath moveToPoint: CGPointMake(13.73, 24.77)];
+    [bezierPath addLineToPoint: CGPointMake(13.73, 28.96)];
+    [bezierPath addLineToPoint: CGPointMake(15.68, 28.96)];
+    [bezierPath addCurveToPoint: CGPointMake(17.44, 26.87) controlPoint1: CGPointMake(16.79, 28.96) controlPoint2: CGPointMake(17.44, 28.2)];
+    [bezierPath addCurveToPoint: CGPointMake(15.65, 24.77) controlPoint1: CGPointMake(17.44, 25.56) controlPoint2: CGPointMake(16.77, 24.77)];
+    [bezierPath addLineToPoint: CGPointMake(13.73, 24.77)];
+    [bezierPath closePath];
+    [bezierPath moveToPoint: CGPointMake(30, 28.64)];
+    [bezierPath addLineToPoint: CGPointMake(29.29, 28.64)];
+    [bezierPath addCurveToPoint: CGPointMake(27.66, 27.14) controlPoint1: CGPointMake(29.12, 27.78) controlPoint2: CGPointMake(28.53, 27.14)];
+    [bezierPath addCurveToPoint: CGPointMake(25.8, 30.14) controlPoint1: CGPointMake(26.52, 27.14) controlPoint2: CGPointMake(25.8, 28.31)];
+    [bezierPath addCurveToPoint: CGPointMake(27.66, 33.18) controlPoint1: CGPointMake(25.8, 31.99) controlPoint2: CGPointMake(26.53, 33.18)];
+    [bezierPath addCurveToPoint: CGPointMake(29.29, 31.74) controlPoint1: CGPointMake(28.5, 33.18) controlPoint2: CGPointMake(29.11, 32.65)];
+    [bezierPath addLineToPoint: CGPointMake(29.99, 31.74)];
+    [bezierPath addCurveToPoint: CGPointMake(27.66, 34) controlPoint1: CGPointMake(29.82, 33.07) controlPoint2: CGPointMake(28.97, 34)];
+    [bezierPath addCurveToPoint: CGPointMake(25.08, 30.14) controlPoint1: CGPointMake(26.09, 34) controlPoint2: CGPointMake(25.08, 32.5)];
+    [bezierPath addCurveToPoint: CGPointMake(27.66, 26.33) controlPoint1: CGPointMake(25.08, 27.82) controlPoint2: CGPointMake(26.08, 26.33)];
+    [bezierPath addCurveToPoint: CGPointMake(30, 28.64) controlPoint1: CGPointMake(28.97, 26.33) controlPoint2: CGPointMake(29.83, 27.34)];
+    [bezierPath closePath];
+    bezierPath.usesEvenOddFillRule = YES;
+    [fillColor2 setFill];
+    [bezierPath fill];
+
+    CGContextAddPath(context, bezierPath.CGPath);
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsPopContext();
+    UIGraphicsEndImageContext();
+    return image;
+}
+@end
 
 @implementation MXRMessengerIconNode
 
@@ -286,7 +500,6 @@
 }
 
 @end
-
 
 @implementation MXRMessengerSendIconNode
 + (void)drawRect:(CGRect)bounds withParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing {
@@ -322,7 +535,6 @@
 }
 
 @end
-
 
 @implementation MXRMessengerPlusIconNode 
 + (void)drawRect:(CGRect)bounds withParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing {
@@ -616,7 +828,6 @@
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
     return [ASCenterLayoutSpec centerLayoutSpecWithCenteringOptions:ASCenterLayoutSpecCenteringXY sizingOptions:ASCenterLayoutSpecSizingOptionMinimumXY child:_icon];
 }
-
 
 + (instancetype)buttonWithIcon:(MXRMessengerIconNode *)icon matchingToolbar:(MXRMessengerInputToolbar *)toolbar {
     MXRMessengerIconButtonNode* button = [[MXRMessengerIconButtonNode alloc] init];
