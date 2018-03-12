@@ -282,8 +282,9 @@
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         [audioSession setActive:NO error:nil];
         
-        if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:)])
-            [self.toolBarDelegate didRecordMP3Audio:[NSURL URLWithString:self.inputPath]];
+        if ([self.toolBarDelegate respondsToSelector:@selector(didRecordMP3Audio:andDuration:)])
+            [self.toolBarDelegate didRecordMP3Audio:[NSURL URLWithString:self.inputPath]
+                                        andDuration:[self timeStringForCMTime:[[NSDate date] timeIntervalSinceDate:dateAudioStart]]];
         
         [timerAudio invalidate];
         timerAudio = nil;

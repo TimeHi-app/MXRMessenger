@@ -95,6 +95,10 @@
 }
 
 -(void)didTapPlayButton:(NSNotification *)notification {
+    
+    if (CMTimeGetSeconds(self.duration) == 0)
+        return;
+    
     NSError *error;
     self.isPlaying = !self.isPlaying;
     [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
