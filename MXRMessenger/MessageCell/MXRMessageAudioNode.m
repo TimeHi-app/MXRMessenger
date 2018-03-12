@@ -16,6 +16,7 @@
 @interface MXRMessageAudioNode () <AVAudioPlayerDelegate>
 
 @property (strong, nonatomic) AVAudioPlayer *audioPlayer;
+@property (strong, nonatomic) AVPlayer *player;
 @property (assign, nonatomic) CMTime duration;
 @property (assign, nonatomic) BOOL isPlaying;
 @property (strong, nonatomic) MXRMessengerPlayButtonNode *playButton;
@@ -103,22 +104,40 @@
     self.isPlaying = !self.isPlaying;
     [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
     
-    if (!self.audioPlayer) {
+//    if (!self.audioPlayer) {
+//
+//        self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:self.audioURL error:&error];
+//        self.audioPlayer.volume = 1;
+//        NSLog(@"%@", error);
+//        self.audioPlayer.delegate = self;
+//        [self.audioPlayer prepareToPlay];
+//    }
+    
+    if (!self.player) {
         
-        self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:self.audioURL error:&error];
-        self.audioPlayer.volume = 1;
-        NSLog(@"%@", error);
-        self.audioPlayer.delegate = self;
-        [self.audioPlayer prepareToPlay];
+        AVAsset *asset = [AVAsset assetWithURL:self.audioURL];
+        AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:asset];
+        
+        self.player = [AVPlayer playerWithPlayerItem:item];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerDidFinishPlaying:) name:AVPlayerItemDidPlayToEndTimeNotification object:item];
+        
     }
     
-    if (self.audioPlayer.isPlaying) {
+    if (self.player.status == AVPlayerTimeControlStatusPlaying) {
         [self.scrubberTime invalidate];
-        [self.audioPlayer stop];
+        [self.player pause];
     } else {
         self.scrubberTime = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateSlider:) userInfo:nil repeats:YES];
-        [self.audioPlayer play];
+        [self.player play];
     }
+    
+//    if (self.audioPlayer.isPlaying) {
+//        [self.scrubberTime invalidate];
+//        [self.audioPlayer stop];
+//    } else {
+//        self.scrubberTime = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateSlider:) userInfo:nil repeats:YES];
+//        [self.audioPlayer play];
+//    }
 }
 
 -(void)updateSlider:(UISlider *)sender {
@@ -154,6 +173,16 @@
     _durationTextNode.attributedText = [self setAttributedString:self.duration];
     [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
     self.audioPlayer = nil;
+    [self.scrubberTime invalidate];
+}
+
+-(void)playerDidFinishPlaying:(NSNotification *)notification {
+    NSLog(@"FINISHED PLAYING");
+    self.isPlaying = !self.isPlaying;
+    [(UISlider *)self.scrubberNode.view setValue:0];
+    _durationTextNode.attributedText = [self setAttributedString:self.duration];
+    [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+    self.player = nil;
     [self.scrubberTime invalidate];
 }
 
@@ -334,7 +363,9 @@
 }
 
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
-    return [ASCenterLayoutSpec centerLayoutSpecWithCenteringOptions:ASCenterLayoutSpecCenteringXY sizingOptions:ASCenterLayoutSpecSizingOptionMinimumXY child:_icon];
+    return [ASCenterLayoutSpec centerLayoutSpecWithCenteringOptions:ASCenterLayoutSpecCenteringXY
+                                                      sizingOptions:ASCenterLayoutSpecSizingOptionMinimumXY
+                                                              child:_icon];
 }
 
 + (instancetype)buttonWithIcon:(MXRMessengerAudioIconNode*)icon matchingAudioNode:(MXRMessageAudioNode*)audioNode {
