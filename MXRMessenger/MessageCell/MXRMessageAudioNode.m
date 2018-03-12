@@ -120,6 +120,7 @@
         
         self.player = [AVPlayer playerWithPlayerItem:item];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerDidFinishPlaying:) name:AVPlayerItemDidPlayToEndTimeNotification object:item];
+        [self.player addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:NULL];
         
     }
     
@@ -138,6 +139,12 @@
 //        self.scrubberTime = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateSlider:) userInfo:nil repeats:YES];
 //        [self.audioPlayer play];
 //    }
+}
+
+-(void)observeValueForKeyPath:(NSString*)path ofObject:(id)object change:(NSDictionary*)change context:(void*) context {
+    
+    NSLog(@"%ld", (long)self.player.status);
+    
 }
 
 -(void)updateSlider:(UISlider *)sender {
@@ -165,16 +172,16 @@
     UIGraphicsEndImageContext();
     return image;
 }
-
--(void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
-    NSLog(@"FINISHED PLAYING");
-    self.isPlaying = !self.isPlaying;
-    [(UISlider *)self.scrubberNode.view setValue:0];
-    _durationTextNode.attributedText = [self setAttributedString:self.duration];
-    [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
-    self.audioPlayer = nil;
-    [self.scrubberTime invalidate];
-}
+//
+//-(void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
+//    NSLog(@"FINISHED PLAYING");
+//    self.isPlaying = !self.isPlaying;
+//    [(UISlider *)self.scrubberNode.view setValue:0];
+//    _durationTextNode.attributedText = [self setAttributedString:self.duration];
+//    [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+//    self.audioPlayer = nil;
+//    [self.scrubberTime invalidate];
+//}
 
 -(void)playerDidFinishPlaying:(NSNotification *)notification {
     NSLog(@"FINISHED PLAYING");

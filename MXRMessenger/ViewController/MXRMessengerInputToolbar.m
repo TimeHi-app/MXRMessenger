@@ -260,8 +260,8 @@
     
     dateAudioStart = [NSDate date];
     
-        timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
-        [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
+    timerAudio = [NSTimer scheduledTimerWithTimeInterval:0.07 target:self selector:@selector(audioRecorderUpdate) userInfo:nil repeats:YES];
+    [[NSRunLoop mainRunLoop] addTimer:timerAudio forMode:NSRunLoopCommonModes];
 }
 
 -(void)audioRecorderUpdate {
@@ -479,7 +479,7 @@
     bezierPath.usesEvenOddFillRule = YES;
     [fillColor2 setFill];
     [bezierPath fill];
-
+    
     CGContextAddPath(context, bezierPath.CGPath);
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsPopContext();
