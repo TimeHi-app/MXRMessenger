@@ -17,6 +17,7 @@
 
 @property (strong, nonatomic) AVAudioPlayer *audioPlayer;
 @property (strong, nonatomic) AVPlayer *player;
+@property (strong, nonatomic) AVPlayerItem *playerItem;
 @property (assign, nonatomic) CMTime duration;
 @property (assign, nonatomic) BOOL isPlaying;
 @property (strong, nonatomic) MXRMessengerPlayButtonNode *playButton;
@@ -100,7 +101,7 @@
     if (CMTimeGetSeconds(self.duration) == 0)
         return;
     
-    NSError *error;
+//    NSError *error;
     self.isPlaying = !self.isPlaying;
     [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
     
@@ -116,10 +117,10 @@
     if (!self.player) {
         
         AVAsset *asset = [AVAsset assetWithURL:self.audioURL];
-        AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:asset];
+        self.playerItem = [AVPlayerItem playerItemWithAsset:asset];
         
-        self.player = [AVPlayer playerWithPlayerItem:item];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerDidFinishPlaying:) name:AVPlayerItemDidPlayToEndTimeNotification object:item];
+        self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerDidFinishPlaying:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
         [self.player addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:NULL];
         
     }
@@ -143,16 +144,18 @@
 
 -(void)observeValueForKeyPath:(NSString*)path ofObject:(id)object change:(NSDictionary*)change context:(void*) context {
     
-    NSLog(@"%ld", (long)self.player.status);
+    if (self.playerItem.status == AVPlayerStatusReadyToPlay) {
+        
+    }
     
 }
 
 -(void)updateSlider:(UISlider *)sender {
 
-    NSLog(@"CURRENT TIME: %f", self.audioPlayer.currentTime);
-    [(UISlider *)self.scrubberNode.view setValue:self.audioPlayer.currentTime];
+    NSLog(@"CURRENT TIME: %f", CMTimeGetSeconds(self.player.currentTime));
+    [(UISlider *)self.scrubberNode.view setValue:CMTimeGetSeconds(self.player.currentTime)];
 
-    self.durationTextNode.attributedText = [self setAttributedString:CMTimeMake(self.audioPlayer.currentTime, 1)];
+    self.durationTextNode.attributedText = [self setAttributedString:self.player.currentTime];
 }
 
 -(UIImage *)drawThumbImage {
@@ -189,6 +192,7 @@
     [(UISlider *)self.scrubberNode.view setValue:0];
     _durationTextNode.attributedText = [self setAttributedString:self.duration];
     [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
+    [self.playerItem removeObserver:self forKeyPath:@"status"];
     self.player = nil;
     [self.scrubberTime invalidate];
 }
