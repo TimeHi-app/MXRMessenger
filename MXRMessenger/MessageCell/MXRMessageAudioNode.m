@@ -121,6 +121,7 @@
         return;
     
     self.isPlaying = !self.isPlaying;
+    self.isBuffering = YES;
     [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
     
     if (!self.player) {
@@ -130,7 +131,7 @@
         
         self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerDidFinishPlaying:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
-        [self.player addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:NULL];
+        [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:NULL];
         
     }
     
@@ -139,7 +140,6 @@
         [self.player pause];
     } else {
         self.scrubberTime = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateSlider:) userInfo:nil repeats:YES];
-        self.isBuffering = YES;
         [self.player play];
     }
 }
@@ -218,6 +218,8 @@
             slider.minimumTrackTintColor = [UIColor colorWithRed:144/255.0f green:18/255.0f blue:254/255.0f alpha:1.0f];
             slider.maximumTrackTintColor = [UIColor whiteColor];
             
+            [slider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
+            
             UIImage *thumbImage = [self drawThumbImage];
             
             [slider setThumbImage:thumbImage forState:UIControlStateNormal];
@@ -228,6 +230,11 @@
         _scrubberNode.style.flexShrink = 1;
     }
     [self addSubnode:_scrubberNode];
+}
+
+-(void)sliderValueChanged:(UISlider *)slider {
+    CMTime newTime = CMTimeMakeWithSeconds(slider.value * CMTimeGetSeconds(self.duration), self.player.currentTime.timescale);
+    [self.player seekToTime:newTime];
 }
 
 -(ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
