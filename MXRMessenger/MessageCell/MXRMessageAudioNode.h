@@ -47,6 +47,9 @@
 @interface MXRMessengerPauseButtonNode : MXRMessengerAudioIconNode
 @end
 
+@interface MXRMessengerLoadButtonNode : MXRMessengerAudioIconNode
+@end
+
 @interface MXRMessengerAudioIconButtonNode : ASControlNode
 
 @property (nonatomic, strong) MXRMessengerAudioIconNode* icon;

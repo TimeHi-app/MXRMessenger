@@ -22,9 +22,11 @@
 @property (assign, nonatomic) BOOL isPlaying;
 @property (strong, nonatomic) MXRMessengerPlayButtonNode *playButton;
 @property (strong, nonatomic) MXRMessengerPauseButtonNode *pauseButton;
+@property (strong, nonatomic) MXRMessengerLoadButtonNode *loadButton;
 @property (strong, nonatomic) UIImage *playImage;
 @property (strong, nonatomic) UIImage *pauseImage;
 @property (strong, nonatomic) NSTimer *scrubberTime;
+@property (assign, nonatomic) BOOL isBuffering;
 
 @end
 
@@ -46,6 +48,7 @@
         _pauseImage = configuration.pauseButtonNode;
         _duration = CMTimeMake(duration, 1);
         
+        [self createLoadButtonNode];
         [self createDurationTextField];
         [self createPlayButtonNode];
         [self createPauseButtonNode];
@@ -82,9 +85,23 @@
         _playButton = [[MXRMessengerPlayButtonNode alloc] init];
         [_playButton setImage:_playImage forState:UIControlStateNormal];
         _playButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
-        
     }
     [_playButton addTarget:self action:@selector(didTapPlayButton:) forControlEvents:ASControlNodeEventTouchUpInside];
+}
+
+-(void)createLoadButtonNode {
+    if (!_loadButton) {
+        _loadButton = [[MXRMessengerLoadButtonNode alloc] initWithViewBlock:^UIView * _Nonnull{
+            UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithFrame:CGRectZero];
+            spinner.color = [UIColor blackColor];
+            [spinner startAnimating];
+            
+            return spinner;
+        }];
+        
+        [_loadButton setTitle:@"" withFont:[UIFont systemFontOfSize:15.0f] withColor:[UIColor clearColor] forState:UIControlStateNormal];
+        _loadButton.style.preferredSize = CGSizeMake(39.0f, 39.0f);
+    }
 }
 
 -(void)createPauseButtonNode {
@@ -96,23 +113,15 @@
     [_pauseButton addTarget:self action:@selector(didTapPlayButton:) forControlEvents:ASControlNodeEventTouchUpInside];
 }
 
+
+
 -(void)didTapPlayButton:(NSNotification *)notification {
     
     if (CMTimeGetSeconds(self.duration) == 0)
         return;
     
-//    NSError *error;
     self.isPlaying = !self.isPlaying;
     [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
-    
-//    if (!self.audioPlayer) {
-//
-//        self.audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:self.audioURL error:&error];
-//        self.audioPlayer.volume = 1;
-//        NSLog(@"%@", error);
-//        self.audioPlayer.delegate = self;
-//        [self.audioPlayer prepareToPlay];
-//    }
     
     if (!self.player) {
         
@@ -130,22 +139,16 @@
         [self.player pause];
     } else {
         self.scrubberTime = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateSlider:) userInfo:nil repeats:YES];
+        self.isBuffering = YES;
         [self.player play];
     }
-    
-//    if (self.audioPlayer.isPlaying) {
-//        [self.scrubberTime invalidate];
-//        [self.audioPlayer stop];
-//    } else {
-//        self.scrubberTime = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateSlider:) userInfo:nil repeats:YES];
-//        [self.audioPlayer play];
-//    }
 }
 
 -(void)observeValueForKeyPath:(NSString*)path ofObject:(id)object change:(NSDictionary*)change context:(void*) context {
     
     if (self.playerItem.status == AVPlayerStatusReadyToPlay) {
-        
+        self.isBuffering = NO;
+        [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
     }
     
 }
@@ -175,16 +178,6 @@
     UIGraphicsEndImageContext();
     return image;
 }
-//
-//-(void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
-//    NSLog(@"FINISHED PLAYING");
-//    self.isPlaying = !self.isPlaying;
-//    [(UISlider *)self.scrubberNode.view setValue:0];
-//    _durationTextNode.attributedText = [self setAttributedString:self.duration];
-//    [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
-//    self.audioPlayer = nil;
-//    [self.scrubberTime invalidate];
-//}
 
 -(void)playerDidFinishPlaying:(NSNotification *)notification {
     NSLog(@"FINISHED PLAYING");
@@ -277,7 +270,13 @@
 }
 
 -(ASLayoutSpec *)containerLayoutSpectThatFits:(CGSize)buttonSize {
-    MXRMessengerAudioIconNode *node = self.isPlaying ? self.pauseButton : self.playButton;
+    MXRMessengerAudioIconNode *node;
+    
+    if (self.isBuffering)
+        node = self.loadButton;
+    else
+        node = self.isPlaying ? self.pauseButton : self.playButton;
+    
     
     return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(0, 0, 0, 0 ) child:node];
 }
@@ -361,6 +360,9 @@
 @end
 
 @implementation MXRMessengerPauseButtonNode
+@end
+
+@implementation MXRMessengerLoadButtonNode
 @end
 
 @implementation MXRMessengerAudioIconButtonNode
