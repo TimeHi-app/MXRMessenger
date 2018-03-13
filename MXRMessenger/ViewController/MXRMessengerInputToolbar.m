@@ -10,9 +10,6 @@
 
 #import <MXRMessenger/UIColor+MXRMessenger.h>
 #import <AudioToolbox/AudioToolbox.h>
-#import <MXRmessenger/ExtAudioConverter.h>
-
-@import lame;
 
 @interface MXRMessengerInputToolbar () <MXRMessengerIconButtonDelegate, AVAudioPlayerDelegate, MXRMessengerInputToolBarDelegate>
 
@@ -91,6 +88,8 @@
         _audioInputButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerMicIconNode alloc] init] matchingToolbar:self];
         _audioInputButton.delegate = self;
         
+        _arrowInputButton = [MXRMessengerIconButtonNode buttonWithIcon:[[MXRMessengerIconNode alloc] init] matchingToolbar:self];
+        
         _rightButtonsNode = _audioInputButton;
         
         _finalInsets = UIEdgeInsetsMake(8, 0, 10, 0);
@@ -107,7 +106,8 @@
         }
     } else {
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
-        _rightButtonsNode.backgroundColor = [UIColor blueColor];
+//        _audioInputButton = _arrowInputButton;
+//        _rightButtonsNode.backgroundColor = [UIColor blueColor];
         pointAudioStart = [touch locationInView:self.view];
         [self audioRecorderInit];
     }
@@ -115,13 +115,13 @@
 
 -(void)touchDidMove:(UITouch *)touch {
     if (!isTyping) {
-        CGPoint point = _rightButtonsNode.view.center;
-        point.x = [touch locationInView:self.view].x;
-        
+//        CGPoint point = _rightButtonsNode.view.center;
+//        point.x = [touch locationInView:self.view].x;
+
         CGPoint point2 = _sliderNode.view.center;
         point2.x = [touch locationInView:self.view].x - (_sliderNode.view.frame.size.width / 2) - _rightButtonsNode.view.frame.size.width;
-        
-        _rightButtonsNode.view.center = point;
+//
+//        _rightButtonsNode.view.center = point;
         _sliderNode.view.center = point2;
         _sliderNode.zPosition = - 1;
     }
@@ -129,9 +129,11 @@
 
 -(void)touchDidEnd:(UITouch *)touch {
     if (!isTyping) {
-        if (![_rightButtonsNode.backgroundColor isEqual:[UIColor whiteColor]]) {
-            _rightButtonsNode.backgroundColor = [UIColor whiteColor];
-        }
+//        if (![_rightButtonsNode.backgroundColor isEqual:[UIColor whiteColor]]) {
+//            _rightButtonsNode.backgroundColor = [UIColor whiteColor];
+//        }
+        _rightButtonsNode.alpha = 1.0f;
+        
         CGPoint pointAudioStop = [touch locationInView:self.view];
         CGFloat distanceAudio = sqrtf(powf(pointAudioStop.x - pointAudioStart.x, 2) + pow(pointAudioStop.y - pointAudioStart.y, 2));
         [self audioRecorderStop:(distanceAudio < 50)];
@@ -486,6 +488,36 @@
     UIGraphicsEndImageContext();
     return image;
 }
+
+-(UIImage *)drawMicArrow {
+    CGRect rect = CGRectMake(0.0, 0.0, 107.0, 50.0);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    UIGraphicsPushContext(context);
+    UIGraphicsBeginImageContextWithOptions(rect.size, NO, [UIScreen mainScreen].scale);
+    
+    UIColor* fillColor = [UIColor colorWithRed: 0.31 green: 0.404 blue: 1 alpha: 1];
+
+    UIBezierPath* bezier2Path = [UIBezierPath bezierPath];
+    [bezier2Path moveToPoint: CGPointMake(17, 0)];
+    [bezier2Path addLineToPoint: CGPointMake(17, 50)];
+    [bezier2Path addLineToPoint: CGPointMake(0, 25)];
+    [bezier2Path addLineToPoint: CGPointMake(17, 0)];
+//    [bezier2Path closePath];
+    [bezier2Path moveToPoint: CGPointMake(17, 50)];
+    [bezier2Path addLineToPoint: CGPointMake(107, 50)];
+    [bezier2Path addLineToPoint: CGPointMake(107, 0)];
+    [bezier2Path addLineToPoint: CGPointMake(17, 0)];
+    [bezier2Path addLineToPoint: CGPointMake(17, 50)];
+    [bezier2Path closePath];
+    [fillColor setFill];
+    [bezier2Path fill];
+    
+    CGContextAddPath(context, bezier2Path.CGPath);
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsPopContext();
+    UIGraphicsEndImageContext();
+    return image;
+}
 @end
 
 @implementation MXRMessengerIconNode
@@ -540,6 +572,27 @@
     }
 }
 
+@end
+
+@implementation MXRMessengerArrowIconNode
++(void)drawRect:(CGRect)bounds withParameters:(id)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing {
+    UIColor* fillColor = [UIColor colorWithRed: 0.31 green: 0.404 blue: 1 alpha: 1];
+    
+    UIBezierPath* bezier2Path = [UIBezierPath bezierPath];
+    [bezier2Path moveToPoint: CGPointMake(17, 0)];
+    [bezier2Path addLineToPoint: CGPointMake(17, 50)];
+    [bezier2Path addLineToPoint: CGPointMake(0, 25)];
+    [bezier2Path addLineToPoint: CGPointMake(17, 0)];
+    //    [bezier2Path closePath];
+    [bezier2Path moveToPoint: CGPointMake(17, 50)];
+    [bezier2Path addLineToPoint: CGPointMake(107, 50)];
+    [bezier2Path addLineToPoint: CGPointMake(107, 0)];
+    [bezier2Path addLineToPoint: CGPointMake(17, 0)];
+    [bezier2Path addLineToPoint: CGPointMake(17, 50)];
+    [bezier2Path closePath];
+    [fillColor setFill];
+    [bezier2Path fill];
+}
 @end
 
 @implementation MXRMessengerPlusIconNode 
@@ -661,7 +714,15 @@
 
 @end
 
-@implementation MXRMessengerMicIconNode
+@implementation MXRMessengerMicIconNode {
+    CAShapeLayer *_mainLayer;
+    CAAnimationGroup *_animationGroup;
+    UIColor *_pulseColor;
+    CGFloat _pulseRadius;
+    CGFloat _pulseDuration;
+    UIColor *_buttonColor;
+    CGFloat _cornerRadius;
+}
 + (void)drawRect:(CGRect)bounds withParameters:(id<NSObject>)parameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelledBlock isRasterizing:(BOOL)isRasterizing {
     UIColor* color2 = [UIColor colorWithRed: 0.5 green: 0.5 blue: 0.5 alpha: 1];
     
@@ -735,6 +796,7 @@
         }
     }
 }
+
 @end
 
 @implementation MXRMessengerEmojiIconNode

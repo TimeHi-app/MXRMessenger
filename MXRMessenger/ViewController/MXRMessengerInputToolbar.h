@@ -22,6 +22,7 @@
 @property (nonatomic, strong) ASDisplayNode* rightButtonsNode;
 @property (nonatomic, strong, readonly) MXRMessengerIconButtonNode* defaultSendButton; // setting rightButtonsNode hides this
 @property (nonatomic, strong, readonly) MXRMessengerIconButtonNode* audioInputButton;
+@property (nonatomic, strong, readonly) MXRMessengerIconButtonNode* arrowInputButton;
 @property (nonatomic, strong, readonly) ASImageNode* recordingNode;
 @property (nonatomic, strong, readonly) ASTextNode* recDurationNode;
 @property (nonatomic, strong, readonly) ASDisplayNode* recContainerNode;
@@ -54,6 +55,9 @@
 @end
 
 @interface MXRMessengerEmojiIconNode : MXRMessengerIconNode
+@end
+
+@interface MXRMessengerArrowIconNode : MXRMessengerIconNode
 @end
 
 @protocol MXRMessengerIconButtonDelegate <NSObject>
