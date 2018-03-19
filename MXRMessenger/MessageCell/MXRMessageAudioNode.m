@@ -120,9 +120,8 @@
     if (CMTimeGetSeconds(self.duration) == 0)
         return;
     
-    self.isPlaying = !self.isPlaying;
+    
     self.isBuffering = YES;
-    [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
     
     if (!self.player) {
         
@@ -135,13 +134,17 @@
         
     }
     
-    if (self.player.status == AVPlayerTimeControlStatusPlaying) {
+    if (self.isPlaying) {
         [self.scrubberTime invalidate];
         [self.player pause];
     } else {
         self.scrubberTime = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateSlider:) userInfo:nil repeats:YES];
         [self.player play];
     }
+    
+    self.isPlaying = !self.isPlaying;
+    
+    [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
 }
 
 -(void)observeValueForKeyPath:(NSString*)path ofObject:(id)object change:(NSDictionary*)change context:(void*) context {
