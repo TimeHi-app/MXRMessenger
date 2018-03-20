@@ -46,7 +46,7 @@
 - (instancetype)initWithCellConfigForMe:(MXRMessageCellConfiguration*)cellConfigForMe cellConfigForOthers:(MXRMessageCellConfiguration*)cellConfigForOthers;
 
 - (MXRMessageTextCellNodeBlock)cellNodeBlockWithText:(NSString*)text tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
-- (MXRMessageImageCellNodeBlock)cellNodeBlockWithImageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
+- (MXRMessageImageCellNodeBlock)cellNodeBlockWithImageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton tableNode:(ASTableNode*)tableNode row:(NSInteger)row isSelected:(BOOL)isSelected;
 - (MXRMessageMediaCollectionCellNodeBlock)cellNodeBlockWithMedia:(NSArray<id<MXRMessengerMedium>>*)media tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
 - (MXRMessageSystemCellNodeBlock)cellNodeBlockWithSystem:(NSString *)system tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
 - (MXRMessageAudioCellNodeBlock)cellNodeBlockWithAudio:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
