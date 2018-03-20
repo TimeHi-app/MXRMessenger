@@ -22,9 +22,10 @@
     UIRectCorner _cornersHavingMaxRadius;
     UIColor* _borderColor;
     CGFloat _borderWidth;
+    BOOL _isSelected;
 }
 
-- (instancetype)initWithImageURL:(NSURL *)imageURL configuration:(MXRMessageImageConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius showsPlayButton:(BOOL)showsPlayButton {
+- (instancetype)initWithImageURL:(NSURL *)imageURL configuration:(MXRMessageImageConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius showsPlayButton:(BOOL)showsPlayButton isSelected:(BOOL)isSelected {
     self = [super initWithConfiguration:configuration];
     if (self) {
         self.automaticallyManagesSubnodes = YES;
@@ -34,6 +35,7 @@
         _cornersHavingMaxRadius = cornersHavingRadius;
         _borderColor = configuration.borderColor;
         _borderWidth = configuration.borderWidth;
+        _isSelected = isSelected;
         
         if (configuration.imageCache && configuration.imageDownloader) {
             _imageNode = [[ASNetworkImageNode alloc] initWithCache:configuration.imageCache downloader:configuration.imageDownloader];
@@ -64,7 +66,7 @@
 
 - (instancetype)initWithConfiguration:(MXRMessageNodeConfiguration *)configuration {
     ASDISPLAYNODE_NOT_DESIGNATED_INITIALIZER();
-    return [self initWithImageURL:nil configuration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners showsPlayButton:NO];
+    return [self initWithImageURL:nil configuration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners showsPlayButton:NO isSelected:NO];
 }
 
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
@@ -110,6 +112,14 @@
     
     _imageNode.style.preferredSize = _imageNode.frame.size;
     self.style.preferredSize = _imageNode.style.preferredSize;
+    
+    if (_isSelected) {
+        UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+        UIVisualEffectView *blurEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+        [blurEffectView setFrame:_imageNode.frame];
+        [self.view addSubview:blurEffectView];
+    }
+    
     [self setNeedsLayout];
 }
 

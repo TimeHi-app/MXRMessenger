@@ -17,7 +17,7 @@
 @property (nonatomic, strong, readonly) ASNetworkImageNode* imageNode;
 @property (nonatomic, strong, readonly) MXRPlayButtonNode* playButtonNode;
 
-- (instancetype)initWithImageURL:(NSURL*)imageURL configuration:(MXRMessageImageConfiguration*)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius showsPlayButton:(BOOL)showsPlayButton NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithImageURL:(NSURL*)imageURL configuration:(MXRMessageImageConfiguration*)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius showsPlayButton:(BOOL)showsPlayButton isSelected:(BOOL)isSelected NS_DESIGNATED_INITIALIZER;
 
 @end
 
