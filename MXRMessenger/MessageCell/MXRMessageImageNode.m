@@ -113,12 +113,12 @@
     _imageNode.style.preferredSize = _imageNode.frame.size;
     self.style.preferredSize = _imageNode.style.preferredSize;
     
-    if (_isSelected) {
-        UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
-        UIVisualEffectView *blurEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
-        [blurEffectView setFrame:_imageNode.frame];
-        [self.view addSubview:blurEffectView];
-    }
+//    if (_isSelected) {
+//        UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+//        UIVisualEffectView *blurEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+//        [blurEffectView setFrame:_imageNode.frame];
+//        [self.view addSubview:blurEffectView];
+//    }
     
     [self setNeedsLayout];
 }

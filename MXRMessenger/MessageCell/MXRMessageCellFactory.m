@@ -135,6 +135,14 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
         } else if (type == MXRMessageContentTypeImageOnly) {
             MXRMessageImageNode* imageNode = [[MXRMessageImageNode alloc] initWithImageURL:imageURL configuration:config.imageConfig cornersToApplyMaxRadius:cornersHavingRadius showsPlayButton:showsPlayButton isSelected:isSelected];
             imageNode.delegate = self.contentNodeDelegate;
+            
+            if (isSelected) {
+                UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+                UIVisualEffectView *blurEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+                [blurEffectView setFrame:imageNode.frame];
+                [imageNode.view addSubview:blurEffectView];
+            }
+            
             cell.messageContentNode = imageNode;
         } else if (type == MXRMessageContentTypeMediaCollectionOnly) {
             MXRMessageMediaCollectionNode* mediaCollectionNode = [[MXRMessageMediaCollectionNode alloc] initWithMedia:media configuration:config.mediaCollectionConfig cornersToApplyMaxRadius:cornersHavingRadius];
