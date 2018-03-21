@@ -29,7 +29,8 @@ typedef NS_ENUM(NSInteger, MXRMessageContentType) {
     MXRMessageContentTypeImageOnly = 1,
     MXRMessageContentTypeMediaCollectionOnly = 2,
     MXRMessageContentTypeSystemOnly = 3,
-    MXRMessageContentTypeAudioOnly = 4
+    MXRMessageContentTypeAudioOnly = 4,
+    MXRMessageContentTypeExplosiveOnly = 5
 };
 
 typedef NS_OPTIONS(NSInteger, MXRMessageMenuItemTypes) {

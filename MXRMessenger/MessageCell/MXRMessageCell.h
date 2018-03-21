@@ -22,6 +22,7 @@
 #import "MXRMessageTextNode.h"
 #import "MXRMessageSystemNode.h"
 #import "MXRMessageAudioNode.h"
+#import "MXRMessageExplosiveNode.h"
 #import "MXRPlayButtonNode.h"
 
 #endif /* MXRMessageCell_h */
