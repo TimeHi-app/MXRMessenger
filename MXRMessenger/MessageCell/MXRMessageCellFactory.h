@@ -50,7 +50,6 @@
 - (MXRMessageMediaCollectionCellNodeBlock)cellNodeBlockWithMedia:(NSArray<id<MXRMessengerMedium>>*)media tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
 - (MXRMessageSystemCellNodeBlock)cellNodeBlockWithSystem:(NSString *)system tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
 - (MXRMessageAudioCellNodeBlock)cellNodeBlockWithAudio:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
-- (MXRMessageExplosiveCellNodeBlock)cellNodeBlockWithExplosive:(ASTableNode *)tableNode row:(NSInteger)row image:(UIImage *)image;
 
 - (ASDisplayNode*)headerNodeFromDate:(NSDate*)date;
 - (void)toggleDateHeaderNodeVisibilityForCellNode:(MXRMessageCellNode*)cellNode;
@@ -76,8 +75,7 @@
 @property (nonatomic, strong, readonly) MXRMessageMediaCollectionConfiguration* mediaCollectionConfig;
 @property (nonatomic, strong, readonly) MXRMessageSystemConfiguration *systemConfig;
 @property (nonatomic, strong, readonly) MXRMessageAudioConfiguration *audioConfig;
-@property (nonatomic, strong, readonly) MXRMessageExplosiveConfiguration *explosiveConfig;
 
-- (instancetype)initWithLayoutConfig:(MXRMessageCellLayoutConfiguration*)layoutConfig avatarConfig:(MXRMessageAvatarConfiguration*)avatarConfig textConfig:(MXRMessageTextConfiguration*)textConfig imageConfig:(MXRMessageImageConfiguration*)imageConfig mediaCollectionConfig:(MXRMessageMediaCollectionConfiguration*)mediaCollectionConfig systemConfig:(MXRMessageSystemConfiguration*)systemConfig audioConfig:(MXRMessageAudioConfiguration *)audioConfig explosiveConfig:(MXRMessageExplosiveConfiguration*)explosiveConfig;
+- (instancetype)initWithLayoutConfig:(MXRMessageCellLayoutConfiguration*)layoutConfig avatarConfig:(MXRMessageAvatarConfiguration*)avatarConfig textConfig:(MXRMessageTextConfiguration*)textConfig imageConfig:(MXRMessageImageConfiguration*)imageConfig mediaCollectionConfig:(MXRMessageMediaCollectionConfiguration*)mediaCollectionConfig systemConfig:(MXRMessageSystemConfiguration*)systemConfig audioConfig:(MXRMessageAudioConfiguration *)audioConfig;
 
 @end

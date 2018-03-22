@@ -97,9 +97,6 @@
     
     MXRMessageSystemConfiguration *systemConfig = [[MXRMessageSystemConfiguration alloc] initWithFont:nil textColor:[UIColor blueColor] backgroundColor:[UIColor mxr_bubbleBlueGrey]];
     
-    MXRMessageExplosiveConfiguration *explosiveConfig = [[MXRMessageExplosiveConfiguration alloc] init];
-    explosiveConfig.maxCornerRadius = maxCornerRadius;
-    
     textConfigForMe.menuItemTypes |= MXRMessageMenuItemTypeDelete;
     textConfigForOthers.menuItemTypes |= MXRMessageMenuItemTypeDelete;
     imageConfig.menuItemTypes |= MXRMessageMenuItemTypeDelete;
@@ -107,8 +104,8 @@
     CGFloat s = [UIScreen mainScreen].scale;
     imageConfig.borderWidth = s > 0 ? (1.0f/s) : 0.5f;
     
-    MXRMessageCellConfiguration* cellConfigForMe = [[MXRMessageCellConfiguration alloc] initWithLayoutConfig:layoutConfigForMe avatarConfig:avatarConfigForMe textConfig:textConfigForMe imageConfig:imageConfig mediaCollectionConfig:mediaCollectionConfig systemConfig:systemConfig audioConfig:audioConfig explosiveConfig:explosiveConfig];
-    MXRMessageCellConfiguration* cellConfigForOthers = [[MXRMessageCellConfiguration alloc] initWithLayoutConfig:layoutConfigForOthers avatarConfig:avatarConfigForOthers textConfig:textConfigForOthers imageConfig:imageConfig mediaCollectionConfig:mediaCollectionConfig systemConfig:systemConfig audioConfig:audioConfig explosiveConfig:explosiveConfig];
+    MXRMessageCellConfiguration* cellConfigForMe = [[MXRMessageCellConfiguration alloc] initWithLayoutConfig:layoutConfigForMe avatarConfig:avatarConfigForMe textConfig:textConfigForMe imageConfig:imageConfig mediaCollectionConfig:mediaCollectionConfig systemConfig:systemConfig audioConfig:audioConfig];
+    MXRMessageCellConfiguration* cellConfigForOthers = [[MXRMessageCellConfiguration alloc] initWithLayoutConfig:layoutConfigForOthers avatarConfig:avatarConfigForOthers textConfig:textConfigForOthers imageConfig:imageConfig mediaCollectionConfig:mediaCollectionConfig systemConfig:systemConfig audioConfig:audioConfig];
     
     self.cellFactory = [[MXRMessageCellFactory alloc] initWithCellConfigForMe:cellConfigForMe cellConfigForOthers:cellConfigForOthers];
     self.cellFactory.dataSource = self;

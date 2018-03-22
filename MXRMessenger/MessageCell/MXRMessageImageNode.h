@@ -9,6 +9,7 @@
 #import "MXRMessageContentNode.h"
 
 #import "MXRPlayButtonNode.h"
+#import "MXRBombButtonNode.h"
 
 @class MXRMessageImageConfiguration;
 
@@ -16,6 +17,7 @@
 
 @property (nonatomic, strong, readonly) ASNetworkImageNode* imageNode;
 @property (nonatomic, strong, readonly) MXRPlayButtonNode* playButtonNode;
+@property (nonatomic, strong, readonly) MXRBombButtonNode* bombButtonNode;
 
 - (instancetype)initWithImageURL:(NSURL*)imageURL configuration:(MXRMessageImageConfiguration*)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius showsPlayButton:(BOOL)showsPlayButton isSelected:(BOOL)isSelected NS_DESIGNATED_INITIALIZER;
 

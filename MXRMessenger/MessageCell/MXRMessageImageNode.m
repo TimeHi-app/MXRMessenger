@@ -29,6 +29,8 @@
 - (instancetype)initWithImageURL:(NSURL *)imageURL configuration:(MXRMessageImageConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius showsPlayButton:(BOOL)showsPlayButton isSelected:(BOOL)isSelected {
     self = [super initWithConfiguration:configuration];
     if (self) {
+        ASDisplayNodeAssert(showsPlayButton == isSelected, @"Video can't be explosive");
+        
         self.automaticallyManagesSubnodes = YES;
         _maxSize = configuration.maximumImageSize;
         _maxCornerRadius = configuration.maxCornerRadius;
@@ -61,6 +63,10 @@
             _playButtonNode = [[MXRPlayButtonNode alloc] init];
         }
         
+        if (isSelected) {
+            _bombButtonNode = [[MXRBombButtonNode alloc] init];
+        }
+        
     }
     return self;
 }
@@ -73,10 +79,17 @@
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
     NSLog(@"%s", __PRETTY_FUNCTION__);
     ASInsetLayoutSpec* imageInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsZero child:_imageNode];
+    
     if (_playButtonNode) {
         _playButtonNode.style.preferredSize = [MXRPlayButtonNode suggestedSizeWhenRenderedOverImageWithSizeInPoints:_imageNode.style.preferredSize];
         return [ASOverlayLayoutSpec overlayLayoutSpecWithChild:imageInset overlay:[ASCenterLayoutSpec centerLayoutSpecWithCenteringOptions:ASCenterLayoutSpecCenteringXY sizingOptions:ASCenterLayoutSpecSizingOptionMinimumXY child:_playButtonNode]];
     }
+    
+    if (_bombButtonNode) {
+        _bombButtonNode.style.preferredSize = [MXRBombButtonNode suggestedSizeWhenRenderedOverImageWithSizeInPoints:_imageNode.style.preferredSize];
+        return [ASOverlayLayoutSpec overlayLayoutSpecWithChild:imageInset overlay:[ASCenterLayoutSpec centerLayoutSpecWithCenteringOptions:ASCenterLayoutSpecCenteringXY sizingOptions:ASCenterLayoutSpecSizingOptionMinimumXY child:_bombButtonNode]];
+    }
+    
     return imageInset;
 }
 
@@ -118,12 +131,8 @@
     _imageNode.style.preferredSize = _imageNode.frame.size;
     self.style.preferredSize = _imageNode.style.preferredSize;
     
-//    if (_isSelected) {
-//        UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
-//        UIVisualEffectView *blurEffectView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
-//        [blurEffectView setFrame:_imageNode.frame];
-//        [self.view addSubview:blurEffectView];
-//    }
+    if (_isSelected)
+        _imageNode.image = [image applyLightEffect];
     
     [self setNeedsLayout];
 }
