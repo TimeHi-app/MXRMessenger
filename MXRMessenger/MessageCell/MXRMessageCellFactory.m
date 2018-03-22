@@ -68,30 +68,30 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
 }
 
 - (MXRMessageTextCellNodeBlock)cellNodeBlockWithText:(NSString *)text tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageTextCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeTextOnly text:text imageURL:nil showsPlayButton:NO media:nil audioURL:nil duration:0 tableNode:tableNode row:row isSelected:NO];
+    return (MXRMessageTextCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeTextOnly text:text imageURL:nil showsPlayButton:NO media:nil audioURL:nil duration:0 tableNode:tableNode row:row isSelected:NO image:[UIImage new]];
 }
 
 - (MXRMessageImageCellNodeBlock)cellNodeBlockWithImageURL:(NSURL *)imageURL showsPlayButton:(BOOL)showsPlayButton tableNode:(ASTableNode *)tableNode row:(NSInteger)row isSelected:(BOOL)isSelected {
-    return (MXRMessageImageCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeImageOnly text:nil imageURL:imageURL showsPlayButton:showsPlayButton media:nil audioURL:nil duration:0 tableNode:tableNode row:row isSelected:isSelected];
+    return (MXRMessageImageCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeImageOnly text:nil imageURL:imageURL showsPlayButton:showsPlayButton media:nil audioURL:nil duration:0 tableNode:tableNode row:row isSelected:isSelected image:[UIImage new]];
 }
 
 - (MXRMessageMediaCollectionCellNodeBlock)cellNodeBlockWithMedia:(NSArray<id<MXRMessengerMedium>> *)media tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageMediaCollectionCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeMediaCollectionOnly text:nil imageURL:nil showsPlayButton:YES media:media audioURL:nil duration:0 tableNode:tableNode row:row isSelected:NO];
+    return (MXRMessageMediaCollectionCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeMediaCollectionOnly text:nil imageURL:nil showsPlayButton:YES media:media audioURL:nil duration:0 tableNode:tableNode row:row isSelected:NO image:[UIImage new]];
 }
 
 - (MXRMessageSystemCellNodeBlock)cellNodeBlockWithSystem:(NSString *)system tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageSystemCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeSystemOnly text:system imageURL:nil showsPlayButton:NO media:nil audioURL:nil duration:0 tableNode:tableNode row:row isSelected:NO];
+    return (MXRMessageSystemCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeSystemOnly text:system imageURL:nil showsPlayButton:NO media:nil audioURL:nil duration:0 tableNode:tableNode row:row isSelected:NO image:[UIImage new]];
 }
 
 - (MXRMessageAudioCellNodeBlock)cellNodeBlockWithAudio:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageAudioCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeAudioOnly text:nil imageURL:nil showsPlayButton:NO media:nil audioURL:audioURL duration:duration tableNode:tableNode row:row isSelected:NO];
+    return (MXRMessageAudioCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeAudioOnly text:nil imageURL:nil showsPlayButton:NO media:nil audioURL:audioURL duration:duration tableNode:tableNode row:row isSelected:NO image:[UIImage new]];
 }
 
-- (MXRMessageExplosiveCellNodeBlock)cellNodeBlockWithExplosive:(ASTableNode *)tableNode row:(NSInteger)row {
-    return (MXRMessageExplosiveCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeExplosiveOnly text:nil imageURL:nil showsPlayButton:NO media:nil audioURL:nil duration:0 tableNode:tableNode row:row isSelected:NO];
+- (MXRMessageExplosiveCellNodeBlock)cellNodeBlockWithExplosive:(ASTableNode *)tableNode row:(NSInteger)row image:(UIImage *)image {
+    return (MXRMessageExplosiveCellNodeBlock)[self cellNodeBlockWithType:MXRMessageContentTypeExplosiveOnly text:nil imageURL:nil showsPlayButton:NO media:nil audioURL:nil duration:0 tableNode:tableNode row:row isSelected:NO image:image];
 }
 
-- (ASCellNodeBlock)cellNodeBlockWithType:(MXRMessageContentType)type text:(NSString *)text imageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton media:(NSArray<id<MXRMessengerMedium>> *)media audioURL:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row isSelected:(BOOL)isSelected {
+- (ASCellNodeBlock)cellNodeBlockWithType:(MXRMessageContentType)type text:(NSString *)text imageURL:(NSURL*)imageURL showsPlayButton:(BOOL)showsPlayButton media:(NSArray<id<MXRMessengerMedium>> *)media audioURL:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row isSelected:(BOOL)isSelected image:(UIImage *)image {
     // we query the datasource before entering block, all other computations can go in the async block
 
     __block MXRMessageContext context; __block MXRMessageContext previousContext; __block MXRMessageContext nextContext;
@@ -159,7 +159,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
             MXRMessageAudioNode *audioNode = [[MXRMessageAudioNode alloc] initWithAudioURL:audioURL duration:duration configuration:config.audioConfig cornersToApplyMaxRadius:cornersHavingRadius];
             cell.messageContentNode = audioNode;
         } else if (type == MXRMessageContentTypeExplosiveOnly) {
-            MXRMessageExplosiveNode *explosiveNode = [[MXRMessageExplosiveNode alloc] initWithExplosiveConfiguration:config.explosiveConfig cornersToApplyMaxRadius:cornersHavingRadius];
+            MXRMessageExplosiveNode *explosiveNode = [[MXRMessageExplosiveNode alloc] initWithExplosiveConfiguration:config.explosiveConfig cornersToApplyMaxRadius:cornersHavingRadius image:image];
             cell.messageContentNode = explosiveNode;
         }
 

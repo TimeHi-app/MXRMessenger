@@ -50,7 +50,7 @@
 - (MXRMessageMediaCollectionCellNodeBlock)cellNodeBlockWithMedia:(NSArray<id<MXRMessengerMedium>>*)media tableNode:(ASTableNode*)tableNode row:(NSInteger)row;
 - (MXRMessageSystemCellNodeBlock)cellNodeBlockWithSystem:(NSString *)system tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
 - (MXRMessageAudioCellNodeBlock)cellNodeBlockWithAudio:(NSURL *)audioURL duration:(NSUInteger)duration tableNode:(ASTableNode *)tableNode row:(NSInteger)row;
-- (MXRMessageExplosiveCellNodeBlock)cellNodeBlockWithExplosive:(ASTableNode *)tableNode row:(NSInteger)row;
+- (MXRMessageExplosiveCellNodeBlock)cellNodeBlockWithExplosive:(ASTableNode *)tableNode row:(NSInteger)row image:(UIImage *)image;
 
 - (ASDisplayNode*)headerNodeFromDate:(NSDate*)date;
 - (void)toggleDateHeaderNodeVisibilityForCellNode:(MXRMessageCellNode*)cellNode;

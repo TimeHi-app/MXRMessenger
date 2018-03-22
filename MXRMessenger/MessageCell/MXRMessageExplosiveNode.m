@@ -20,9 +20,10 @@
     UIRectCorner _cornersHavingMaxRadius;
     UIColor* _borderColor;
     CGFloat _borderWidth;
+    UIImage* _image;
 }
 
--(instancetype)initWithExplosiveConfiguration:(MXRMessageExplosiveConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius {
+-(instancetype)initWithExplosiveConfiguration:(MXRMessageExplosiveConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius image:(UIImage *)image {
     self = [super initWithConfiguration:configuration];
     if (self) {
         self.automaticallyManagesSubnodes = YES;
@@ -32,10 +33,11 @@
         _cornersHavingMaxRadius = cornersHavingRadius;
         _borderColor = configuration.borderColor;
         _borderWidth = configuration.borderWidth;
+        _image = image;
         
         [self setImageModificationBlockForSize:configuration.maximumImageSize];
         
-        _imageNode.image = [self imageWithBlur];
+        _imageNode.image = [self imageWithBlur: image];
         
         _imageNode.style.preferredSize = configuration.maximumImageSize;
         self.style.preferredSize = _imageNode.style.preferredSize;
@@ -47,7 +49,7 @@
 
 - (instancetype)initWithConfiguration:(MXRMessageNodeConfiguration *)configuration {
     ASDISPLAYNODE_NOT_DESIGNATED_INITIALIZER();
-    return [self initWithExplosiveConfiguration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners];
+    return [self initWithExplosiveConfiguration:nil cornersToApplyMaxRadius:UIRectCornerAllCorners image:[UIImage new]];
 }
 
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
@@ -71,9 +73,9 @@
     [_imageNode setNeedsDisplay];
 }
 
--(UIImage *)imageWithBlur {
+-(UIImage *)imageWithBlur:(UIImage *)originalImage {
     
-    UIImage *image = [UIImage new];
+    UIImage *image = originalImage;
     [image drawInRect:CGRectMake(0, 0, 100.0f, 100.0f)];
     
     CGFloat blurAmount = 1.0f;

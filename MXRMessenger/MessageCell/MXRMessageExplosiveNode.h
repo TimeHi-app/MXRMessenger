@@ -14,7 +14,7 @@
 @property (nonatomic, strong, readonly) ASNetworkImageNode *imageNode;
 @property (nonatomic, strong, readonly) ASImageNode *blurNode;
 
--(instancetype)initWithExplosiveConfiguration:(MXRMessageExplosiveConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius NS_DESIGNATED_INITIALIZER;
+-(instancetype)initWithExplosiveConfiguration:(MXRMessageExplosiveConfiguration *)configuration cornersToApplyMaxRadius:(UIRectCorner)cornersHavingRadius image:(UIImage *)image NS_DESIGNATED_INITIALIZER;
 
 @end
 
