@@ -10,6 +10,7 @@
 
 #import "UIImage+MXRMessenger.h"
 #import "UIColor+MXRMessenger.h"
+#import "UIImage+ImageEffects.h"
 
 @interface MXRMessageImageNode() <ASNetworkImageNodeDelegate>
 
@@ -70,6 +71,7 @@
 }
 
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     ASInsetLayoutSpec* imageInset = [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsZero child:_imageNode];
     if (_playButtonNode) {
         _playButtonNode.style.preferredSize = [MXRPlayButtonNode suggestedSizeWhenRenderedOverImageWithSizeInPoints:_imageNode.style.preferredSize];
@@ -79,12 +81,14 @@
 }
 
 - (void)setImageModificationBlockForSize:(CGSize)size {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     if (_minCornerRadius > 0.0f || _borderWidth > 0.0f) {
         _imageNode.imageModificationBlock = [UIImage mxr_imageModificationBlockToScaleToSize:size maximumCornerRadius:_maxCornerRadius minimumCornerRadius:_minCornerRadius borderColor:_borderColor borderWidth:_borderWidth cornersToApplyMaxRadius:_cornersHavingMaxRadius];
     }
 }
 
 - (void)redrawBubbleWithCorners:(UIRectCorner)cornersHavingRadius {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     _cornersHavingMaxRadius = cornersHavingRadius;
     [self setImageModificationBlockForSize:_imageNode.frame.size];
     [_imageNode setNeedsDisplay];
@@ -93,6 +97,7 @@
 #pragma mark - ASNetworkImageNodeDelegate
 
 - (void)imageNode:(ASNetworkImageNode *)imageNode didLoadImage:(UIImage *)image {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
     if (!image || image.size.width == 0 || image.size.height == 0) return;
     
     // The next layout pass may happen after the image finishes decoding, so we need to

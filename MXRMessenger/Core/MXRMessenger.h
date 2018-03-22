@@ -23,7 +23,7 @@
 #import <MXRMessenger/UIBezierPath+MXRMessenger.h>
 #import <MXRMessenger/UIColor+MXRMessenger.h>
 #import <MXRMessenger/UIImage+MXRMessenger.h>
-
+#import <MXRMessenger/UIImage+ImageEffects.h>
 
 // message cell
 #if MXR_MESSAGE_CELL
