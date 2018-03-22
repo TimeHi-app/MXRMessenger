@@ -21,7 +21,7 @@
 
 + (CGSize)suggestedSizeWhenRenderedOverImageWithSizeInPoints:(CGSize)imageSize {
     CGFloat smallerSide = MIN(imageSize.width, imageSize.height);
-    if (smallerSide >= 140.0f) return CGSizeMake(70.0, 70.0f);
+    if (smallerSide >= 112.0f) return CGSizeMake(56.0f, 56.0f);
     return CGSizeMake(0.50f*smallerSide, 0.50f*smallerSide);
 }
 
