@@ -198,7 +198,11 @@
     if  (_textInputNode.textView.text.length == 0) {
         isTyping = NO;
         [self transitionLayoutWithAnimation:YES shouldMeasureAsync:NO measurementCompletion:nil];
-    }
+    } else {
+        if ([self.toolBarDelegate respondsToSelector:@selector(editableTextDidUpdate)]) {
+            [self.toolBarDelegate editableTextDidUpdate];
+        }
+    } 
 }
 
 -(BOOL)editableTextNode:(ASEditableTextNode *)editableTextNode shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
@@ -210,6 +214,8 @@
     
     return YES;
 }
+
+
 
 - (NSString*)clearText {
     NSString* text = [_textInputNode.attributedText.string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];

@@ -14,7 +14,7 @@
 #import "Message.h"
 #import "Person.h"
 
-@interface ChatViewController () <MXRMessageCellFactoryDataSource, MXRMessageContentNodeDelegate, MXRMessageMediaCollectionNodeDelegate, ASTableDelegate, ASTableDataSource, MXRMessengerInputToolBarDelegate>
+@interface ChatViewController () <MXRMessageCellFactoryDataSource, MXRMessageContentNodeDelegate, MXRMessageMediaCollectionNodeDelegate, ASTableDelegate, ASTableDataSource, MXRMessengerInputToolBarDelegate, ASEditableTextNodeDelegate>
 
 @property (nonatomic, strong) MXRMessageCellFactory* cellFactory;
 @property (nonatomic, strong) NSMutableArray <Message*>* messages;
@@ -43,6 +43,10 @@
         _otherPersonsAvatar = person.avatarURL;
     }
     return self;
+}
+
+-(void)editableTextDidUpdate {
+    NSLog(@"AAAAA");
 }
 
 - (void)viewDidLoad {

@@ -14,6 +14,7 @@
 
 -(void)didRecordMP3Audio:(NSURL *)fileURL andDuration:(NSString *)duration;
 -(void)didTapSendButton;
+-(void)editableTextDidUpdate;
 
 @end
 
