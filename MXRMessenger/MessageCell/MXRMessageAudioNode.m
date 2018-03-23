@@ -120,7 +120,6 @@
     if (CMTimeGetSeconds(self.duration) == 0)
         return;
     
-    
     self.isBuffering = YES;
     
     if (!self.player) {
@@ -153,7 +152,6 @@
         self.isBuffering = NO;
         [self transitionLayoutWithAnimation:NO shouldMeasureAsync:NO measurementCompletion:nil];
     }
-    
 }
 
 -(void)updateSlider:(UISlider *)sender {
@@ -202,7 +200,6 @@
                               NSFontAttributeName : [UIFont systemFontOfSize:12.0],
                               NSForegroundColorAttributeName: [UIColor blackColor]
                               };
-    
     
     NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:[self timeStringForCMTime:time] attributes:options];
     
@@ -288,7 +285,7 @@
         node = self.isPlaying ? self.pauseButton : self.playButton;
     
     
-    return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(0, 0, 0, 0 ) child:node];
+    return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(0, 0, 0, 0) child:node];
 }
 
 - (void)redrawBubble {

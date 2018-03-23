@@ -53,6 +53,7 @@
 
 - (ASDisplayNode*)headerNodeFromDate:(NSDate*)date;
 - (void)toggleDateHeaderNodeVisibilityForCellNode:(MXRMessageCellNode*)cellNode;
+- (void)toogleTypingFooterNodeVisibilityForCellNode:(MXRMessageCellNode *)cellNode;
 - (void)updateTableNode:(ASTableNode*)tableNode animated:(BOOL)animated withInsertions:(NSArray<NSIndexPath*>*)insertions deletions:(NSArray<NSIndexPath*>*)deletions reloads:(NSArray<NSIndexPath*>*)reloads completion:(void(^)(BOOL))completion;
 
 @end

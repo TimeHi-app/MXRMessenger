@@ -254,6 +254,15 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
     [cellNode setNeedsLayout];
 }
 
+-(void)toogleTypingFooterNodeVisibilityForCellNode:(MXRMessageCellNode *)cellNode {
+    if (cellNode.footerNode) {
+        cellNode.footerNode = nil;
+    } else {
+        cellNode.footerNode = [self footerNodeFromText:@"is typing"];
+    }
+    [cellNode setNeedsLayout];
+}
+
 - (void)updateTableNode:(ASTableNode *)tableNode animated:(BOOL)animated withInsertions:(NSArray<NSIndexPath *> *)insertions deletions:(NSArray<NSIndexPath *> *)deletions reloads:(NSArray<NSIndexPath *> *)reloads completion:(void (^)(BOOL finished))completion {
 
     NSInteger oldNumberOfRows = [tableNode numberOfRowsInSection:0];
