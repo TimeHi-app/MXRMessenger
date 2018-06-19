@@ -240,7 +240,15 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
 - (ASDisplayNode *)footerNodeFromText:(NSString *)text {
     ASTextNode *readTextNode = [[ASTextNode alloc] init];
     readTextNode.layerBacked = YES;
-    readTextNode.attributedText = [[NSAttributedString alloc] initWithString:text];
+    
+    NSMutableParagraphStyle *paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    paragraphStyle.alignment = NSTextAlignmentCenter;
+    
+    readTextNode.attributedText = [[NSAttributedString alloc] initWithString:text
+                                                                  attributes:@{
+                                                                               NSParagraphStyleAttributeName : paragraphStyle
+                                                                               }];
+    readTextNode.textContainerInset = UIEdgeInsetsMake(20, 0, 8, 0);
     return readTextNode;
 }
 
@@ -254,11 +262,11 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
     [cellNode setNeedsLayout];
 }
 
--(void)toogleTypingFooterNodeVisibilityForCellNode:(MXRMessageCellNode *)cellNode {
+- (void)toogleTypingFooterNodeVisibilityForCellNode:(MXRMessageCellNode *)cellNode withText:(NSString *)text {
     if (cellNode.footerNode) {
         cellNode.footerNode = nil;
     } else {
-        cellNode.footerNode = [self footerNodeFromText:@"is typing"];
+        cellNode.footerNode = [self footerNodeFromText:text];
     }
     [cellNode setNeedsLayout];
 }

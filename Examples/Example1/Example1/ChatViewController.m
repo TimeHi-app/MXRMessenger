@@ -161,18 +161,20 @@
 
 - (ASCellNodeBlock)tableNode:(ASTableNode *)tableNode nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath {
     Message* message = self.messages[indexPath.row];
-//    if (message.media.count > 1) 
-//        return [self.cellFactory cellNodeBlockWithMedia:message.media tableNode:tableNode row:indexPath.row];
-//    } else if (message.media.count == 1) {
-//        MessageMedium* medium = message.media.firstObject;
-//        return [self.cellFactory cellNodeBlockWithImageURL:medium.photoURL showsPlayButton:(medium.videoURL != nil) tableNode:tableNode row:indexPath.row];
-//    } else {
-//        return [self.cellFactory cellNodeBlockWithSystem:message.text tableNode:tableNode row:indexPath.row];
+    if (message.media.count > 1) {
+        return [self.cellFactory cellNodeBlockWithMedia:message.media tableNode:tableNode row:indexPath.row];
+    } else if (message.media.count == 1) {
+        MessageMedium* medium = message.media.firstObject;
+        return [self.cellFactory cellNodeBlockWithImageURL:medium.photoURL showsPlayButton:(medium.videoURL != nil) tableNode:tableNode row:indexPath.row isSelected:NO];
+    } else {
+        return [self.cellFactory cellNodeBlockWithText:message.text tableNode:tableNode row:indexPath.row];
     
+        
+        
 //    NSURL *testURL = [NSURL URLWithString:@"http://devimages.apple.com/iphone/samples/bipbop/gear3/prog_index.m3u8"];
-            MessageMedium* medium = message.media.firstObject;
-    return [self.cellFactory cellNodeBlockWithAudio:medium.audioURL duration:10 tableNode:tableNode row:indexPath.row];
-//    }
+//            MessageMedium* medium = message.media.firstObject;
+//    return [self.cellFactory cellNodeBlockWithAudio:medium.audioURL duration:10 tableNode:tableNode row:indexPath.row];
+    }
 }
 
 - (void)tableNode:(ASTableNode *)tableNode didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -200,7 +202,8 @@
         return;
     } else if ([node isKindOfClass:[MXRMessageTextNode class]]) {
         NSLog(@"Single tapped text");
-        [self.cellFactory toggleDateHeaderNodeVisibilityForCellNode:cellNode];
+        [self.cellFactory toogleTypingFooterNodeVisibilityForCellNode:cellNode withText:@"aaaaaa"];
+//        [self.cellFactory toggleDateHeaderNodeVisibilityForCellNode:cellNode];
     }
 }
 
