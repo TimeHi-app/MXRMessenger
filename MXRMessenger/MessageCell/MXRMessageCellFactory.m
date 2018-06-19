@@ -263,7 +263,7 @@ static inline BOOL MXRMessageContextNextShowsDate(MXRMessageContext c) { return 
 }
 
 - (void)toogleTypingFooterNodeVisibilityForCellNode:(MXRMessageCellNode *)cellNode withText:(NSString *)text {
-    if (cellNode.footerNode) {
+    if (cellNode.footerNode && !text) {
         cellNode.footerNode = nil;
     } else {
         cellNode.footerNode = [self footerNodeFromText:text];

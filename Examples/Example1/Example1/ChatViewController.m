@@ -202,8 +202,8 @@
         return;
     } else if ([node isKindOfClass:[MXRMessageTextNode class]]) {
         NSLog(@"Single tapped text");
-        [self.cellFactory toogleTypingFooterNodeVisibilityForCellNode:cellNode withText:@"aaaaaa"];
-//        [self.cellFactory toggleDateHeaderNodeVisibilityForCellNode:cellNode];
+//        [self.cellFactory toogleTypingFooterNodeVisibilityForCellNode:cellNode withText:@"aaaaaa"];
+        [self.cellFactory toggleDateHeaderNodeVisibilityForCellNode:cellNode];
     }
 }
 
